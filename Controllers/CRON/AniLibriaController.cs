@@ -75,7 +75,6 @@ namespace JacRed.Controllers.CRON
                         }
 
                         FileDB.AddOrUpdate(torrents);
-                        torrents = null;
                     }
 
                     roots = null;

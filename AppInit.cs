@@ -53,6 +53,8 @@ namespace JacRed
 
         public bool evercache = false;
 
+        public int fdbPathLevels = 2;
+
         public int timeStatsUpdate = 20; // минут
 
         public int timeSync = 10; // минут

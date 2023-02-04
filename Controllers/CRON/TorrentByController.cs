@@ -417,7 +417,7 @@ namespace JacRed.Controllers.CRON
             }
 
             FileDB.AddOrUpdate(torrents);
-            return true;
+            return torrents.Count > 0;
         }
         #endregion
     }

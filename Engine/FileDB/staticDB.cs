@@ -31,8 +31,17 @@ namespace JacRed.Engine
         static string pathDb(string key)
         {
             string md5key = HashTo.md5(key);
-            Directory.CreateDirectory($"Data/fdb/{md5key[0]}");
-            return $"Data/fdb/{md5key[0]}/{md5key}";
+
+            if (AppInit.conf.fdbPathLevels == 2)
+            {
+                Directory.CreateDirectory($"Data/fdb/{md5key.Substring(0, 2)}");
+                return $"Data/fdb/{md5key.Substring(0, 2)}/{md5key.Substring(2)}";
+            }
+            else
+            {
+                Directory.CreateDirectory($"Data/fdb/{md5key[0]}");
+                return $"Data/fdb/{md5key[0]}/{md5key}";
+            }
         }
 
         static string keyDb(string name, string originalname)
@@ -85,7 +94,7 @@ namespace JacRed.Engine
             }
             else
             {
-                var fdb = new FileDB(key, openwrite: true);
+                var fdb = new FileDB(key);
                 openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
                 return fdb;
             }

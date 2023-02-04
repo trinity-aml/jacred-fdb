@@ -17,14 +17,14 @@ namespace JacRed.Engine
 
                 try
                 {
-                    var stats = new Dictionary<string, (DateTime lastnewtor, int newtor, int update, int alltorrents)>();
+                    var stats = new Dictionary<string, (DateTime lastnewtor, int newtor, int update, int check, int alltorrents)>();
 
                     foreach (var item in FileDB.masterDb)
                     {
                         foreach (var t in FileDB.OpenRead(item.Key).Values)
                         {
                             if (!stats.TryGetValue(t.trackerName, out var val))
-                                stats.Add(t.trackerName, (t.createTime, 0, 0, 0));
+                                stats.Add(t.trackerName, (t.createTime, 0, 0, 0, 0));
 
                             var s = stats[t.trackerName];
                             s.alltorrents = s.alltorrents + 1;
@@ -38,6 +38,9 @@ namespace JacRed.Engine
                             if (t.updateTime >= DateTime.Today)
                                 s.update = s.update + 1;
 
+                            if (t.checkTime >= DateTime.Today)
+                                s.check = s.check + 1;
+
                             stats[t.trackerName] = s;
                         }
                     }
@@ -48,6 +51,7 @@ namespace JacRed.Engine
                         lastnewtor = i.Value.lastnewtor.ToString("dd.MM.yyyy"),
                         i.Value.newtor,
                         i.Value.update,
+                        i.Value.check,
                         i.Value.alltorrents,
                     }), Formatting.Indented));
                 }

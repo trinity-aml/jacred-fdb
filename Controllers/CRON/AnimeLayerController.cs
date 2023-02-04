@@ -154,7 +154,12 @@ namespace JacRed.Controllers.CRON
                 }
 
                 if (createTime == default)
-                    continue;
+                {
+                    if (page != 1)
+                        continue;
+
+                    createTime = DateTime.UtcNow;
+                }
                 #endregion
 
                 #region Данные раздачи
@@ -245,7 +250,7 @@ namespace JacRed.Controllers.CRON
                 return false;
             });
 
-            return true;
+            return torrents.Count > 0;
         }
         #endregion
     }

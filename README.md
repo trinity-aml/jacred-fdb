@@ -1,12 +1,34 @@
 # Установка
 curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
 
+# Настройка парсера
+1. Настроить init.conf
+2. Перенести в crontab "Data/crontab" или указать сервер "syncapi" в init.conf 
+
 # Источники 
 Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Rezka, Baibako, LostFilm, Anilibria, Animelayer, Anifilm
 
 # Доступ к доменам .onion
 1. Запустить tor на порту 9050
 2. В init.conf указать .onion домен в host
+
+# Параметры init.conf
+* apikey - включение авторизации по ключу
+* mergeduplicates - объединять дубликаты в выдаче 
+* openstats - открыть доступ к статистике 
+* opensync - разрешить синхронизацию с базой через syncapi
+* syncapi - источник с открытым opensync для синхронизации базы 
+* timeSync - интервал синхронизации с базой syncapi 
+* maxreadfile - максимальное количество открытых файлов за один поисковый запрос 
+* evercache - хранить открытые файлы в кеше (рекомендуется для общего доступа с высокой нагрузкой)
+* fdbPathLevels - для релиза 25.01.2023 установить в 1
+* timeStatsUpdate - интервал обновления статистики в минутах 
+
+При включении evercache, нужно убрать в JacRed.runtimeconfig.json лимит потребления памяти 
+```
+"System.GC.HeapCount": 30,
+"System.GC.HeapHardLimit": 309715200, // ~300mb
+```
 
 # Настройка init.conf
 * Список всех параметров, а так же значения по умолчанию смотреть в example.conf 

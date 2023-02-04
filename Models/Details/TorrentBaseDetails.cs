@@ -23,6 +23,8 @@ namespace JacRed.Models.Details
 
         public DateTime updateTime { get; set; } = DateTime.UtcNow;
 
+        public DateTime checkTime { get; set; } = DateTime.Now;
+
         public string magnet { get; set; }
 
 

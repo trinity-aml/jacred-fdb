@@ -210,7 +210,7 @@ namespace JacRed.Controllers.CRON
                 return false;
             });
 
-            return true;
+            return torrents.Count > 0;
         }
         #endregion
     }

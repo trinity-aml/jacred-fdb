@@ -52,6 +52,27 @@ namespace JacRed.Controllers
                         torrent.Value.updateTime = DateTime.UtcNow;
                         FileDB.masterDb[item.Key] = torrent.Value.updateTime;
                     }
+
+                    fdb.savechanges = true;
+                }
+            }
+
+            FileDB.SaveChangesToFile();
+            return Json(new { ok = true });
+        }
+
+        public JsonResult ResetCheckTime()
+        {
+            foreach (var item in FileDB.masterDb)
+            {
+                using (var fdb = FileDB.OpenWrite(item.Key))
+                {
+                    foreach (var torrent in fdb.Database)
+                    {
+                        torrent.Value.checkTime = DateTime.Today.AddDays(-1);
+                    }
+
+                    fdb.savechanges = true;
                 }
             }
 
