@@ -139,14 +139,19 @@ namespace JacRed.Controllers.CRON
                 // Дата создания
                 DateTime createTime = tParse.ParseCreateTime(Match("<small>Загружена: ([0-9]+ [^ ]+ [0-9]{4}) в [^<]+</small>"), "dd.MM.yyyy");
                 if (createTime == default)
-                    continue;
+                {
+                    if (page != 0)
+                        continue;
+
+                    createTime = DateTime.UtcNow;
+                }
 
                 #region Данные раздачи
                 var gurl = Regex.Match(row, "<a href=\"/?(details.php\\?id=[0-9]+)[^\"]+\">([^<]+)</a>").Groups;
 
                 string url = gurl[1].Value;
                 string title = gurl[2].Value;
-                title = title.Replace("(Обновляемая)", "").Replace("(Золото)", "");
+                title = title.Replace("(Обновляемая)", "").Replace("(Золото)", "").Replace("(Оновлюється)", "");
                 title = Regex.Replace(title, "/( +| )?$", "").Trim();
 
                 if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(title) || !Regex.IsMatch(title, "(1080p|720p)"))
@@ -196,7 +201,7 @@ namespace JacRed.Controllers.CRON
                 if (db.TryGetValue(t.url, out TorrentDetails _tcache) && _tcache.title == t.title)
                     return true;
 
-                byte[] torrent = await HttpClient.Download(t.downloadUri, cookie: cookie);
+                byte[] torrent = await HttpClient.Download(t.downloadUri, cookie: cookie, referer: $"{AppInit.conf.Baibako.host}/browse.php");
                 string magnet = BencodeTo.Magnet(torrent);
                 string sizeName = BencodeTo.SizeName(torrent);
 

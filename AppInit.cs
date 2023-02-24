@@ -49,6 +49,8 @@ namespace JacRed
 
         public string syncapi = null;
 
+        public string[] synctrackers = null;
+
         public int maxreadfile = 100;
 
         public bool evercache = false;

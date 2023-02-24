@@ -362,7 +362,9 @@ namespace JacRed.Controllers
                     else
                     {
                         var t = temp[hex];
-                        t.torrent.trackerName += $", {torrent.trackerName}";
+
+                        if (!t.torrent.trackerName.Contains(torrent.trackerName))
+                            t.torrent.trackerName += $", {torrent.trackerName}";
 
                         #region UpdateMagnet
                         void UpdateMagnet()
