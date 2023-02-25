@@ -130,7 +130,18 @@ namespace JacRed.Controllers.CRON
         #region parsePage
         async Task<bool> parsePage(string cat, int page)
         {
-            string html = await HttpClient.Get($"{AppInit.conf.Megapeer.rqHost()}/browse.php?cat={cat}&page={page}", encoding: Encoding.GetEncoding(1251), useproxy: AppInit.conf.Megapeer.useproxy);
+            string html = await HttpClient.Get($"{AppInit.conf.Megapeer.rqHost()}/browse.php?cat={cat}&page={page}", encoding: Encoding.GetEncoding(1251), useproxy: AppInit.conf.Megapeer.useproxy, addHeaders: new List<(string name, string val)>() 
+            {
+                ("dnt", "1"),
+                ("pragma", "no-cache"),
+                ("referer", $"{AppInit.conf.Megapeer.rqHost()}/cat/{cat}"),
+                ("sec-fetch-dest", "document"),
+                ("sec-fetch-mode", "navigate"),
+                ("sec-fetch-site", "same-origin"),
+                ("sec-fetch-user", "?1"),
+                ("upgrade-insecure-requests", "1")
+            });
+
             if (html == null || !html.Contains("id=\"logo\""))
                 return false;
 
