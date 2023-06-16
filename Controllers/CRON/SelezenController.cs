@@ -117,8 +117,12 @@ namespace JacRed.Controllers.CRON
                 // Загружаем список страниц в список задач
                 for (int page = 1; page <= maxpages; page++)
                 {
-                    if (taskParse.Find(i => i.page == page) == null)
-                        taskParse.Add(new TaskParse(page));
+                    try
+                    {
+                        if (taskParse.Find(i => i.page == page) == null)
+                            taskParse.Add(new TaskParse(page));
+                    }
+                    catch { }
                 }
             }
 
@@ -137,9 +141,9 @@ namespace JacRed.Controllers.CRON
 
             _parseAllTaskWork = true;
 
-            try
+            foreach (var val in taskParse.ToArray())
             {
-                foreach (var val in taskParse)
+                try
                 {
                     if (DateTime.Today == val.updateTime)
                         continue;
@@ -150,8 +154,8 @@ namespace JacRed.Controllers.CRON
                     if (res)
                         val.updateTime = DateTime.Today;
                 }
+                catch { }
             }
-            catch { }
 
             _parseAllTaskWork = false;
             return "ok";
@@ -163,20 +167,23 @@ namespace JacRed.Controllers.CRON
         async Task<bool> parsePage(int page)
         {
             #region Авторизация
-            if (Cookie == null)
+            if (Cookie == null && string.IsNullOrEmpty(AppInit.conf.Selezen.cookie))
             {
                 if (await TakeLogin() == false)
                     return false;
             }
             #endregion
 
-            string html = await HttpClient.Get(page == 1 ? $"{AppInit.conf.Selezen.host}/relizy-ot-selezen/" : $"{AppInit.conf.Selezen.host}/relizy-ot-selezen/page/{page}/", cookie: Cookie, useproxy: AppInit.conf.Selezen.useproxy);
+            string cookie = AppInit.conf.Selezen.cookie ?? Cookie;
+            string html = await HttpClient.Get(page == 1 ? $"{AppInit.conf.Selezen.host}/relizy-ot-selezen/" : $"{AppInit.conf.Selezen.host}/relizy-ot-selezen/page/{page}/", cookie: cookie, useproxy: AppInit.conf.Selezen.useproxy);
             if (html == null || !html.Contains("dle_root"))
                 return false;
 
             if (!html.Contains($">{AppInit.conf.Selezen.login.u}<"))
             {
-                await TakeLogin();
+                if (string.IsNullOrEmpty(AppInit.conf.Selezen.cookie))
+                    await TakeLogin();
+
                 return false;
             }
 
@@ -281,7 +288,7 @@ namespace JacRed.Controllers.CRON
                 if (db.TryGetValue(t.url, out TorrentDetails _tcache) && _tcache.title == t.title)
                     return true;
 
-                string fullnews = await HttpClient.Get(t.url, cookie: Cookie, useproxy: AppInit.conf.Selezen.useproxy);
+                string fullnews = await HttpClient.Get(t.url, cookie: cookie, useproxy: AppInit.conf.Selezen.useproxy);
                 if (fullnews != null)
                 {
                     string _mg = Regex.Match(fullnews, "href=\"(magnet:\\?xt=urn:btih:[^\"]+)\"").Groups[1].Value;

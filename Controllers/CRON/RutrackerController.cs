@@ -173,36 +173,40 @@ namespace JacRed.Controllers.CRON
                 "1675", "257", "875", "263", "2073", "550", "2124", "1470", "528", "486", "854", "2079", "1336", "2171", "1339", "2455", "1434", "2350", "1472", "2068", "2016"
             })
             {
-                // Получаем html
-                string html = await HttpClient.Get($"{AppInit.conf.Rutracker.rqHost()}/forum/viewforum.php?f={cat}", useproxy: AppInit.conf.Rutracker.useproxy);
-                if (html == null)
-                    continue;
-
-                // Максимальное количиство страниц
-                int.TryParse(Regex.Match(html, "Страница <b>1</b> из <b>([0-9]+)</b>").Groups[1].Value, out int maxpages);
-
-                if (maxpages > 0)
+                try
                 {
-                    // Загружаем список страниц в список задач
-                    for (int page = 0; page <= maxpages; page++)
+                    // Получаем html
+                    string html = await HttpClient.Get($"{AppInit.conf.Rutracker.rqHost()}/forum/viewforum.php?f={cat}", useproxy: AppInit.conf.Rutracker.useproxy);
+                    if (html == null)
+                        continue;
+
+                    // Максимальное количиство страниц
+                    int.TryParse(Regex.Match(html, "Страница <b>1</b> из <b>([0-9]+)</b>").Groups[1].Value, out int maxpages);
+
+                    if (maxpages > 0)
+                    {
+                        // Загружаем список страниц в список задач
+                        for (int page = 0; page <= maxpages; page++)
+                        {
+                            if (!taskParse.ContainsKey(cat))
+                                taskParse.Add(cat, new List<TaskParse>());
+
+                            var val = taskParse[cat];
+                            if (val.Find(i => i.page == page) == null)
+                                val.Add(new TaskParse(page));
+                        }
+                    }
+                    else
                     {
                         if (!taskParse.ContainsKey(cat))
                             taskParse.Add(cat, new List<TaskParse>());
 
                         var val = taskParse[cat];
-                        if (val.Find(i => i.page == page) == null)
-                            val.Add(new TaskParse(page));
+                        if (val.Find(i => i.page == 1) == null)
+                            val.Add(new TaskParse(1));
                     }
                 }
-                else
-                {
-                    if (!taskParse.ContainsKey(cat))
-                        taskParse.Add(cat, new List<TaskParse>());
-
-                    var val = taskParse[cat];
-                    if (val.Find(i => i.page == 1) == null)
-                        val.Add(new TaskParse(1));
-                }
+                catch { }
             }
 
             IO.File.WriteAllText("Data/temp/rutracker_taskParse.json", JsonConvert.SerializeObject(taskParse));
@@ -222,9 +226,9 @@ namespace JacRed.Controllers.CRON
 
             try
             {
-                foreach (var task in taskParse)
+                foreach (var task in taskParse.ToArray())
                 {
-                    foreach (var val in task.Value)
+                    foreach (var val in task.Value.ToArray())
                     {
                         if (DateTime.Today == val.updateTime)
                             continue;

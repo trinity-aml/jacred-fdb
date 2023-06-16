@@ -14,6 +14,8 @@ namespace JacRed.Engine.CORE
 {
     public static class HttpClient
     {
+        static string useragent => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36";
+
         #region webProxy
         static ConcurrentBag<string> proxyRandomList = new ConcurrentBag<string>();
 
@@ -116,7 +118,7 @@ namespace JacRed.Engine.CORE
                 {
                     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
                     client.MaxResponseContentBufferSize = MaxResponseContentBufferSize == 0 ? 10_000_000 : MaxResponseContentBufferSize; // 10MB
-                    client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36");
+                    client.DefaultRequestHeaders.Add("user-agent", useragent);
 
                     if (cookie != null)
                         client.DefaultRequestHeaders.Add("cookie", cookie);
@@ -220,7 +222,7 @@ namespace JacRed.Engine.CORE
                     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
                     client.MaxResponseContentBufferSize = MaxResponseContentBufferSize != 0 ? MaxResponseContentBufferSize : 10_000_000; // 10MB
 
-                    client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36");
+                    client.DefaultRequestHeaders.Add("user-agent", useragent);
                     if (cookie != null)
                         client.DefaultRequestHeaders.Add("cookie", cookie);
 
@@ -332,7 +334,7 @@ namespace JacRed.Engine.CORE
                 {
                     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
                     client.MaxResponseContentBufferSize = MaxResponseContentBufferSize == 0 ? 10_000_000 : MaxResponseContentBufferSize; // 10MB
-                    client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36");
+                    client.DefaultRequestHeaders.Add("user-agent", useragent);
 
                     if (cookie != null)
                         client.DefaultRequestHeaders.Add("cookie", cookie);

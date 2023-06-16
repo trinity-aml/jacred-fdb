@@ -42,7 +42,7 @@ namespace JacRed.Controllers
             }
             #endregion
 
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value))
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
                 {
@@ -63,7 +63,7 @@ namespace JacRed.Controllers
 
         public JsonResult ResetCheckTime()
         {
-            foreach (var item in FileDB.masterDb)
+            foreach (var item in FileDB.masterDb.ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
                 {

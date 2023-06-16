@@ -31,7 +31,7 @@ namespace JacRed.Controllers
             DateTime lastsync = time == -1 ? default : DateTime.FromFileTimeUtc(time);
 
             var torrents = new Dictionary<string, (DateTime, IReadOnlyDictionary<string, TorrentDetails>)>();
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync))
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync).ToArray())
             {
                 var torrent = FileDB.OpenRead(item.Key);
                 countread = countread + torrent.Count;
@@ -67,7 +67,7 @@ namespace JacRed.Controllers
             DateTime lastsync = time == -1 ? default : DateTime.FromFileTimeUtc(time);
 
             var torrents = new Dictionary<string, TorrentDetails>();
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync))
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).Where(i => i.Value > lastsync).ToArray())
             {
                 foreach (var torrent in FileDB.OpenRead(item.Key))
                 {

@@ -17,9 +17,10 @@ namespace JacRed.Engine
 
                 try
                 {
+                    var today = DateTime.Today - (DateTime.Now - DateTime.UtcNow);
                     var stats = new Dictionary<string, (DateTime lastnewtor, int newtor, int update, int check, int alltorrents)>();
 
-                    foreach (var item in FileDB.masterDb)
+                    foreach (var item in FileDB.masterDb.ToArray())
                     {
                         foreach (var t in FileDB.OpenRead(item.Key).Values)
                         {
@@ -32,13 +33,13 @@ namespace JacRed.Engine
                             if (t.createTime > s.lastnewtor)
                                 s.lastnewtor = t.createTime;
 
-                            if (t.createTime >= DateTime.Today)
+                            if (t.createTime >= today)
                                 s.newtor = s.newtor + 1;
 
-                            if (t.updateTime >= DateTime.Today)
+                            if (t.updateTime >= today)
                                 s.update = s.update + 1;
 
-                            if (t.checkTime >= DateTime.Today)
+                            if (t.checkTime >= today)
                                 s.check = s.check + 1;
 
                             stats[t.trackerName] = s;

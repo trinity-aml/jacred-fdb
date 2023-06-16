@@ -79,12 +79,16 @@ namespace JacRed.Controllers.CRON
                     // Загружаем список страниц в список задач
                     for (int page = 0; page < maxpages; page++)
                     {
-                        if (!taskParse.ContainsKey(cat))
-                            taskParse.Add(cat, new List<TaskParse>());
+                        try
+                        {
+                            if (!taskParse.ContainsKey(cat))
+                                taskParse.Add(cat, new List<TaskParse>());
 
-                        var val = taskParse[cat];
-                        if (val.Find(i => i.page == page) == null)
-                            val.Add(new TaskParse(page));
+                            var val = taskParse[cat];
+                            if (val.Find(i => i.page == page) == null)
+                                val.Add(new TaskParse(page));
+                        }
+                        catch { }
                     }
                 }
             }
@@ -106,9 +110,9 @@ namespace JacRed.Controllers.CRON
 
             try
             {
-                foreach (var task in taskParse)
+                foreach (var task in taskParse.ToArray())
                 {
-                    foreach (var val in task.Value)
+                    foreach (var val in task.Value.ToArray())
                     {
                         if (DateTime.Today == val.updateTime)
                             continue;

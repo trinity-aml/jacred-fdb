@@ -173,17 +173,21 @@ namespace JacRed.Controllers.CRON
                         // Загружаем список страниц в список задач
                         for (int page = 0; page <= maxpages; page++)
                         {
-                            if (!taskParse.ContainsKey(cat))
-                                taskParse.Add(cat, new Dictionary<string, List<TaskParse>>());
+                            try
+                            {
+                                if (!taskParse.ContainsKey(cat))
+                                    taskParse.Add(cat, new Dictionary<string, List<TaskParse>>());
 
-                            string arg = $"&d={year}&t=1";
-                            var catVal = taskParse[cat];
-                            if (!catVal.ContainsKey(arg))
-                                catVal.Add(arg, new List<TaskParse>());
+                                string arg = $"&d={year}&t=1";
+                                var catVal = taskParse[cat];
+                                if (!catVal.ContainsKey(arg))
+                                    catVal.Add(arg, new List<TaskParse>());
 
-                            var val = catVal[arg];
-                            if (val.Find(i => i.page == page) == null)
-                                val.Add(new TaskParse(page));
+                                var val = catVal[arg];
+                                if (val.Find(i => i.page == page) == null)
+                                    val.Add(new TaskParse(page));
+                            }
+                            catch { }
                         }
                     }
                 }
@@ -206,11 +210,11 @@ namespace JacRed.Controllers.CRON
 
             try
             {
-                foreach (var cat in taskParse)
+                foreach (var cat in taskParse.ToArray())
                 {
-                    foreach (var arg in cat.Value)
+                    foreach (var arg in cat.Value.ToArray())
                     {
-                        foreach (var val in arg.Value)
+                        foreach (var val in arg.Value.ToArray())
                         {
                             if (DateTime.Today == val.updateTime)
                                 continue;
@@ -267,7 +271,7 @@ namespace JacRed.Controllers.CRON
                 }
                 else if (row.Contains("<td class='s'>вчера"))
                 {
-                    createTime = DateTime.Today.AddDays(-1);
+                    createTime = DateTime.UtcNow.AddDays(-1);
                 }
                 else
                 {

@@ -47,6 +47,8 @@ namespace JacRed
 
         public bool opensync = false;
 
+        public bool log = false;
+
         public string syncapi = null;
 
         public string[] synctrackers = null;
@@ -78,7 +80,7 @@ namespace JacRed
 
         public TrackerSettings Rutracker = new TrackerSettings("https://rutracker.net");
 
-        public TrackerSettings Selezen = new TrackerSettings("https://selezen.org");
+        public TrackerSettings Selezen = new TrackerSettings("https://open.selezen.org");
 
         public TrackerSettings Anilibria = new TrackerSettings("https://api.anilibria.tv");
 

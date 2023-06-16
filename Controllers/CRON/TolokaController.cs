@@ -131,11 +131,15 @@ namespace JacRed.Controllers.CRON
             {
                 string authKey = "toloka:TakeLogin()";
                 if (memoryCache.TryGetValue(authKey, out _))
+                {
+                    IO.File.WriteAllText("Data/temp/toloka_taskParse.json", JsonConvert.SerializeObject(taskParse));
                     return "TakeLogin == null";
+                }
 
                 if (await TakeLogin(memoryCache) == false)
                 {
                     memoryCache.Set(authKey, 0, TimeSpan.FromMinutes(5));
+                    IO.File.WriteAllText("Data/temp/toloka_taskParse.json", JsonConvert.SerializeObject(taskParse));
                     return "TakeLogin == null";
                 }
             }
@@ -172,12 +176,16 @@ namespace JacRed.Controllers.CRON
                     // Загружаем список страниц в список задач
                     for (int page = 0; page < maxpages; page++)
                     {
-                        if (!taskParse.ContainsKey(cat))
-                            taskParse.Add(cat, new List<TaskParse>());
+                        try
+                        {
+                            if (!taskParse.ContainsKey(cat))
+                                taskParse.Add(cat, new List<TaskParse>());
 
-                        var val = taskParse[cat];
-                        if (val.Find(i => i.page == page) == null)
-                            val.Add(new TaskParse(page));
+                            var val = taskParse[cat];
+                            if (val.Find(i => i.page == page) == null)
+                                val.Add(new TaskParse(page));
+                        }
+                        catch { }
                     }
                 }
             }
@@ -199,9 +207,9 @@ namespace JacRed.Controllers.CRON
 
             try
             {
-                foreach (var task in taskParse)
+                foreach (var task in taskParse.ToArray())
                 {
-                    foreach (var val in task.Value)
+                    foreach (var val in task.Value.ToArray())
                     {
                         if (DateTime.Today == val.updateTime)
                             continue;
