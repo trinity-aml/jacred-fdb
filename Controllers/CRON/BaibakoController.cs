@@ -9,6 +9,7 @@ using JacRed.Engine.CORE;
 using System.Collections.Generic;
 using JacRed.Engine;
 using JacRed.Models.Details;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace JacRed.Controllers.CRON
 {
@@ -16,9 +17,15 @@ namespace JacRed.Controllers.CRON
     public class BaibakoController : BaseController
     {
         #region TakeLogin
-        static string cookie { get; set; }
+        static string Cookie(IMemoryCache memoryCache)
+        {
+            if (memoryCache.TryGetValue("baibako:cookie", out string cookie))
+                return cookie;
 
-        async public static Task<bool> TakeLogin()
+            return null;
+        }
+
+        async public Task<bool> TakeLogin()
         {
             try
             {
@@ -62,7 +69,7 @@ namespace JacRed.Controllers.CRON
 
                                 if (!string.IsNullOrWhiteSpace(sessid) && !string.IsNullOrWhiteSpace(uid) && !string.IsNullOrWhiteSpace(pass))
                                 {
-                                    cookie = $"PHPSESSID={sessid}; uid={uid}; pass={pass}";
+                                    memoryCache.Set("baibako:cookie", $"PHPSESSID={sessid}; uid={uid}; pass={pass}", DateTime.Now.AddDays(1));
                                     return true;
                                 }
                             }
@@ -83,7 +90,7 @@ namespace JacRed.Controllers.CRON
         async public Task<string> Parse(int maxpage)
         {
             #region Авторизация
-            if (cookie == null)
+            if (Cookie(memoryCache) == null)
             {
                 if (await TakeLogin() == false)
                     return "Не удалось авторизоваться";
@@ -116,7 +123,7 @@ namespace JacRed.Controllers.CRON
         #region parsePage
         async Task<bool> parsePage(int page)
         {
-            string html = await HttpClient.Get($"{AppInit.conf.Baibako.host}/browse.php?page={page}", encoding: Encoding.GetEncoding(1251), cookie: cookie);
+            string html = await HttpClient.Get($"{AppInit.conf.Baibako.host}/browse.php?page={page}", encoding: Encoding.GetEncoding(1251), cookie: Cookie(memoryCache));
             if (html == null || !html.Contains("id=\"navtop\""))
                 return false;
 
@@ -201,7 +208,7 @@ namespace JacRed.Controllers.CRON
                 if (db.TryGetValue(t.url, out TorrentDetails _tcache) && _tcache.title == t.title)
                     return true;
 
-                byte[] torrent = await HttpClient.Download(t.downloadUri, cookie: cookie, referer: $"{AppInit.conf.Baibako.host}/browse.php");
+                byte[] torrent = await HttpClient.Download(t.downloadUri, cookie: Cookie(memoryCache), referer: $"{AppInit.conf.Baibako.host}/browse.php");
                 string magnet = BencodeTo.Magnet(torrent);
                 string sizeName = BencodeTo.SizeName(torrent);
 

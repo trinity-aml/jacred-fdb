@@ -8,6 +8,7 @@ using JacRed.Engine;
 using JacRed.Engine.CORE;
 using JacRed.Models.Details;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace JacRed.Controllers.CRON
 {
@@ -15,9 +16,15 @@ namespace JacRed.Controllers.CRON
     public class AnimeLayerController : BaseController
     {
         #region TakeLogin
-        static string Cookie { get; set; }
+        static string Cookie(IMemoryCache memoryCache)
+        {
+            if (memoryCache.TryGetValue("animelayer:cookie", out string cookie))
+                return cookie;
 
-        async public static Task<bool> TakeLogin()
+            return null;
+        }
+
+        async public Task<bool> TakeLogin()
         {
             try
             {
@@ -63,7 +70,7 @@ namespace JacRed.Controllers.CRON
 
                                 if (!string.IsNullOrWhiteSpace(layer_id) && !string.IsNullOrWhiteSpace(layer_hash) && !string.IsNullOrWhiteSpace(PHPSESSID))
                                 {
-                                    Cookie = $"layer_id={layer_id}; layer_hash={layer_hash}; PHPSESSID={PHPSESSID};";
+                                    memoryCache.Set("animelayer:cookie", $"layer_id={layer_id}; layer_hash={layer_hash}; PHPSESSID={PHPSESSID};", DateTime.Now.AddDays(1));
                                     return true;
                                 }
                             }
@@ -84,7 +91,7 @@ namespace JacRed.Controllers.CRON
         async public Task<string> Parse(int maxpage = 1)
         {
             #region Авторизация
-            if (Cookie == null)
+            if (Cookie(memoryCache) == null)
             {
                 if (await TakeLogin() == false)
                     return "Не удалось авторизоваться";
@@ -237,7 +244,7 @@ namespace JacRed.Controllers.CRON
                 if (db.TryGetValue(t.url, out TorrentDetails _tcache) && _tcache.title == t.title)
                     return true;
 
-                byte[] torrent = await HttpClient.Download($"{t.url}download/", cookie: Cookie);
+                byte[] torrent = await HttpClient.Download($"{t.url}download/", cookie: Cookie(memoryCache));
                 string magnet = BencodeTo.Magnet(torrent);
                 string sizeName = BencodeTo.SizeName(torrent);
                 if (!string.IsNullOrWhiteSpace(magnet) && !string.IsNullOrWhiteSpace(sizeName))

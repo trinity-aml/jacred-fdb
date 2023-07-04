@@ -27,7 +27,13 @@ namespace JacRed.Controllers.CRON
         }
 
         #region Cookie / TakeLogin
-        static string Cookie;
+        static string Cookie(IMemoryCache memoryCache)
+        {
+            if (memoryCache.TryGetValue("selezen:cookie", out string cookie))
+                return cookie;
+
+            return null;
+        }
 
         async Task<bool> TakeLogin()
         {
@@ -77,7 +83,7 @@ namespace JacRed.Controllers.CRON
 
                                 if (!string.IsNullOrWhiteSpace(PHPSESSID))
                                 {
-                                    Cookie = $"PHPSESSID={PHPSESSID}; _ym_isad=2;";
+                                    memoryCache.Set("selezen:cookie", $"PHPSESSID={PHPSESSID}; _ym_isad=2;", DateTime.Now.AddDays(1));
                                     return true;
                                 }
                             }
@@ -167,14 +173,14 @@ namespace JacRed.Controllers.CRON
         async Task<bool> parsePage(int page)
         {
             #region Авторизация
-            if (Cookie == null && string.IsNullOrEmpty(AppInit.conf.Selezen.cookie))
+            if (Cookie(memoryCache) == null && string.IsNullOrEmpty(AppInit.conf.Selezen.cookie))
             {
                 if (await TakeLogin() == false)
                     return false;
             }
             #endregion
 
-            string cookie = AppInit.conf.Selezen.cookie ?? Cookie;
+            string cookie = AppInit.conf.Selezen.cookie ?? Cookie(memoryCache);
             string html = await HttpClient.Get(page == 1 ? $"{AppInit.conf.Selezen.host}/relizy-ot-selezen/" : $"{AppInit.conf.Selezen.host}/relizy-ot-selezen/page/{page}/", cookie: cookie, useproxy: AppInit.conf.Selezen.useproxy);
             if (html == null || !html.Contains("dle_root"))
                 return false;
