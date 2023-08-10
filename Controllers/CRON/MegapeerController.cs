@@ -64,7 +64,18 @@ namespace JacRed.Controllers.CRON
         {
             foreach (string cat in new List<string>() { "174", "79", "6", "5", "55", "57", "76" })
             {
-                string html = await HttpClient.Get($"{AppInit.conf.Megapeer.rqHost()}/browse.php?cat={cat}", encoding: Encoding.GetEncoding(1251), useproxy: AppInit.conf.Megapeer.useproxy);
+                string html = await HttpClient.Get($"{AppInit.conf.Megapeer.rqHost()}/browse.php?cat={cat}", encoding: Encoding.GetEncoding(1251), useproxy: AppInit.conf.Megapeer.useproxy, addHeaders: new List<(string name, string val)>()
+                {
+                    ("dnt", "1"),
+                    ("pragma", "no-cache"),
+                    ("referer", $"{AppInit.conf.Megapeer.rqHost()}/cat/{cat}"),
+                    ("sec-fetch-dest", "document"),
+                    ("sec-fetch-mode", "navigate"),
+                    ("sec-fetch-site", "same-origin"),
+                    ("sec-fetch-user", "?1"),
+                    ("upgrade-insecure-requests", "1")
+                });
+
                 if (html == null)
                     continue;
 

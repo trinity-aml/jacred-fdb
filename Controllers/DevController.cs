@@ -12,6 +12,9 @@ namespace JacRed.Controllers
     {
         public JsonResult UpdateSize()
         {
+            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
+                return Json(new { badip = true });
+
             #region getSizeInfo
             long getSizeInfo(string sizeName)
             {
@@ -63,6 +66,9 @@ namespace JacRed.Controllers
 
         public JsonResult ResetCheckTime()
         {
+            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
+                return Json(new { badip = true });
+
             foreach (var item in FileDB.masterDb.ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
@@ -70,6 +76,32 @@ namespace JacRed.Controllers
                     foreach (var torrent in fdb.Database)
                     {
                         torrent.Value.checkTime = DateTime.Today.AddDays(-1);
+                    }
+
+                    fdb.savechanges = true;
+                }
+            }
+
+            FileDB.SaveChangesToFile();
+            return Json(new { ok = true });
+        }
+
+        public JsonResult UpdateDetails()
+        {
+            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
+                return Json(new { badip = true });
+
+            foreach (var item in FileDB.masterDb.ToArray())
+            {
+                using (var fdb = FileDB.OpenWrite(item.Key))
+                {
+                    foreach (var torrent in fdb.Database)
+                    {
+                        FileDB.updateFullDetails(torrent.Value);
+                        torrent.Value.languages = null;
+
+                        torrent.Value.updateTime = DateTime.UtcNow;
+                        FileDB.masterDb[item.Key] = torrent.Value.updateTime;
                     }
 
                     fdb.savechanges = true;

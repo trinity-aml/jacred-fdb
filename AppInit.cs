@@ -45,7 +45,13 @@ namespace JacRed
 
         public bool openstats = true;
 
-        public bool opensync = false;
+        public bool opensync = true;
+
+        public bool tracks = false;
+
+        public int tracksdelay = 5000;
+
+        public string[] tsuri = new string[] { "http://127.0.0.1:8090" };
 
         public bool log = false;
 
@@ -53,15 +59,15 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public int maxreadfile = 100;
+        public int maxreadfile = 80;
 
         public bool evercache = false;
 
         public int fdbPathLevels = 2;
 
-        public int timeStatsUpdate = 20; // минут
+        public int timeStatsUpdate = 40; // минут
 
-        public int timeSync = 10; // минут
+        public int timeSync = 20; // минут
 
 
         public TrackerSettings Rutor = new TrackerSettings("http://rutor.info");
@@ -85,8 +91,6 @@ namespace JacRed
         public TrackerSettings Anilibria = new TrackerSettings("https://api.anilibria.tv");
 
         public TrackerSettings Animelayer = new TrackerSettings("http://animelayer.ru");
-
-        public TrackerSettings Anidub = new TrackerSettings("https://tr.anidub.com");
 
         public TrackerSettings Anifilm = new TrackerSettings("https://anifilm.net");
 

@@ -15,6 +15,11 @@ namespace JacRed
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Run());
             ThreadPool.QueueUserWorkItem(async _ => await StatsCron.Run());
 
+            ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(1));
+            ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(2));
+            ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(3));
+            ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(4));
+
             CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 

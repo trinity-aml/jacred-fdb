@@ -35,12 +35,15 @@ namespace JacRed.Engine
         {
             if (Database.TryGetValue(torrent.url, out TorrentDetails t))
             {
-                long startUpdateTime = t.updateTime.ToFileTimeUtc();
+                bool updateFull = false;
 
-                void upt() 
+                void upt(bool uptfull = false) 
                 {
                     savechanges = true;
-                    t.updateTime = DateTime.UtcNow; 
+                    t.updateTime = DateTime.UtcNow;
+
+                    if (uptfull)
+                        updateFull = true;
                 }
 
                 #region types
@@ -49,14 +52,14 @@ namespace JacRed.Engine
                     if (t.types == null)
                     {
                         t.types = torrent.types;
-                        upt();
+                        upt(true);
                     }
                     else
                     {
                         foreach (string type in torrent.types)
                         {
                             if (type != null && !t.types.Contains(type))
-                                upt();
+                                upt(true);
                         }
 
                         t.types = torrent.types;
@@ -67,13 +70,13 @@ namespace JacRed.Engine
                 if (torrent.trackerName != t.trackerName)
                 {
                     t.trackerName = torrent.trackerName;
-                    upt();
+                    upt(true);
                 }
 
                 if (torrent.title != t.title)
                 {
                     t.title = torrent.title;
-                    upt();
+                    upt(true);
                 }
 
                 if (!string.IsNullOrWhiteSpace(torrent.magnet) && torrent.magnet != t.magnet)
@@ -97,7 +100,7 @@ namespace JacRed.Engine
                 if (!string.IsNullOrWhiteSpace(torrent.sizeName) && torrent.sizeName != t.sizeName)
                 {
                     t.sizeName = torrent.sizeName;
-                    upt();
+                    upt(true);
                 }
 
                 if (!string.IsNullOrWhiteSpace(torrent.name) && torrent.name != t.name)
@@ -118,7 +121,7 @@ namespace JacRed.Engine
                     upt();
                 }
 
-                if (startUpdateTime != t.updateTime.ToFileTimeUtc())
+                if (updateFull)
                     updateFullDetails(t);
 
                 else if (AppInit.conf.log)
@@ -174,7 +177,7 @@ namespace JacRed.Engine
 
 
         #region updateFullDetails
-        void updateFullDetails(TorrentDetails t)
+        public static void updateFullDetails(TorrentDetails t)
         {
             #region getSizeInfo
             long getSizeInfo(string sizeName)
@@ -231,9 +234,11 @@ namespace JacRed.Engine
             }
             #endregion
 
+            string titlelower = t.title.ToLower();
+
             #region videotype
             t.videotype = "sdr";
-            if (Regex.IsMatch(t.title.ToLower(), "(\\[| )hdr( |\\]|,|$)") || Regex.IsMatch(t.title.ToLower(), "(10-bit|10 bit|10-бит|10 бит)"))
+            if (Regex.IsMatch(titlelower, "(\\[| )hdr( |\\]|,|$)") || Regex.IsMatch(titlelower, "(10-bit|10 bit|10-бит|10 бит)"))
             {
                 t.videotype = "hdr";
             }
@@ -246,112 +251,81 @@ namespace JacRed.Engine
             {
                 t.voices.Add("LostFilm");
             }
-            else if (t.trackerName == "toloka")
-            {
-                t.voices.Add("Украинский");
-            }
             else if (t.trackerName == "hdrezka")
             {
                 t.voices.Add("HDRezka");
             }
-            else
-            {
-                var allVoices = new HashSet<string>
-                {
-                    "Ozz", "Laci", "Kerob", "LE-Production",  "Parovoz Production", "Paradox", "Omskbird", "LostFilm", "Причудики", "BaibaKo", "NewStudio", "AlexFilm", "FocusStudio", "Gears Media", "Jaskier", "ViruseProject",
-                    "Кубик в Кубе", "IdeaFilm", "Sunshine Studio", "Ozz.tv", "Hamster Studio", "Сербин", "To4ka", "Кравец", "Victory-Films", "SNK-TV", "GladiolusTV", "Jetvis Studio", "ApofysTeam", "ColdFilm",
-                    "Agatha Studdio", "KinoView", "Jimmy J.", "Shadow Dub Project", "Amedia", "Red Media", "Selena International", "Гоблин", "Universal Russia", "Kiitos", "Paramount Comedy", "Кураж-Бамбей",
-                    "Студия Пиратского Дубляжа", "Чадов", "Карповский", "RecentFilms", "Первый канал", "Alternative Production", "NEON Studio", "Колобок", "Дольский", "Синема УС", "Гаврилов", "Живов", "SDI Media",
-                    "Алексеев", "GreenРай Studio", "Михалев", "Есарев", "Визгунов", "Либергал", "Кузнецов", "Санаев", "ДТВ", "Дохалов", "Sunshine Studio", "Горчаков", "LevshaFilm", "CasStudio", "Володарский",
-                    "ColdFilm", "Шварко", "Карцев", "ETV+", "ВГТРК", "Gravi-TV", "1001cinema", "Zone Vision Studio", "Хихикающий доктор", "Murzilka", "turok1990", "FOX", "STEPonee", "Elrom", "Колобок", "HighHopes",
-                    "SoftBox", "GreenРай Studio", "NovaFilm", "Четыре в квадрате", "Greb&Creative", "MUZOBOZ", "ZM-Show", "RecentFilms", "Kerems13", "Hamster Studio", "New Dream Media", "Игмар", "Котов", "DeadLine Studio",
-                    "Jetvis Studio", "РенТВ", "Андрей Питерский", "Fox Life", "Рыбин", "Trdlo.studio", "Studio Victory Аsia", "Ozeon", "НТВ", "CP Digital", "AniLibria", "STEPonee", "Levelin", "FanStudio", "Cmert",
-                    "Интерфильм", "SunshineStudio", "Kulzvuk Studio", "Кашкин", "Вартан Дохалов", "Немахов", "Sedorelli", "СТС", "Яроцкий", "ICG", "ТВЦ", "Штейн", "AzOnFilm", "SorzTeam", "Гаевский", "Мудров",
-                    "Воробьев Сергей", "Студия Райдо", "DeeAFilm Studio", "zamez", "ViruseProject", "Иванов", "STEPonee", "РенТВ", "СВ-Дубль", "BadBajo", "Комедия ТВ", "Мастер Тэйп", "5-й канал СПб", "SDI Media",
-                    "Гланц", "Ох! Студия", "СВ-Кадр", "2x2", "Котова", "Позитив", "RusFilm", "Назаров", "XDUB Dorama", "Реальный перевод", "Kansai", "Sound-Group", "Николай Дроздов", "ZEE TV", "Ozz.tv", "MTV",
-                    "Сыендук", "GoldTeam", "Белов", "Dream Records", "Яковлев", "Vano", "SilverSnow", "Lord32x", "Filiza Studio", "Sony Sci-Fi", "Flux-Team", "NewStation", "XDUB Dorama", "Hamster Studio", "Dream Records",
-                    "DexterTV", "ColdFilm", "Good People", "RusFilm", "Levelin", "AniDUB", "SHIZA Project", "AniLibria.TV", "StudioBand", "AniMedia", "Kansai", "Onibaku", "JWA Project", "MC Entertainment", "Oni", "Jade",
-                    "Ancord", "ANIvoice", "Nika Lenina", "Bars MacAdams", "JAM", "Anika", "Berial", "Kobayashi", "Cuba77", "RiZZ_fisher", "OSLIKt", "Lupin", "Ryc99", "Nazel & Freya", "Trina_D", "JeFerSon", "Vulpes Vulpes",
-                    "Hamster", "KinoGolos", "Fox Crime", "Денис Шадинский", "AniFilm", "Rain Death", "LostFilm", "New Records", "Ancord", "Первый ТВЧ", "RG.Paravozik", "Profix Media", "Tycoon", "RealFake",
-                    "HDrezka", "Jimmy J.", "AlexFilm", "Discovery", "Viasat History", "AniMedia", "JAM", "HiWayGrope", "Ancord", "СВ-Дубль", "Tycoon", "SHIZA Project", "GREEN TEA", "STEPonee", "AlphaProject",
-                    "AnimeReactor", "Animegroup", "Shachiburi", "Persona99", "3df voice", "CactusTeam", "AniMaunt", "AniMedia", "AnimeReactor", "ShinkaDan", "Jaskier", "ShowJet", "RAIM", "RusFilm", "Victory-Films",
-                    "АрхиТеатр", "Project Web Mania", "ko136", "КураСгречей", "AMS", "СВ-Студия", "Храм Дорам ТВ", "TurkStar", "Медведев", "Рябов", "BukeDub", "FilmGate", "FilmsClub", "Sony Turbo", "ТВЦ", "AXN Sci-Fi",
-                    "NovaFilm", "DIVA Universal", "Курдов", "Неоклассика", "fiendover", "SomeWax", "Логинофф", "Cartoon Network", "Sony Turbo", "Loginoff", "CrezaStudio", "Воротилин", "LakeFilms", "Andy", "CP Digital",
-                    "XDUB Dorama + Колобок", "SDI Media", "KosharaSerials", "Екатеринбург Арт", "Julia Prosenuk", "АРК-ТВ Studio", "Т.О Друзей", "Anifilm", "Animedub", "AlphaProject", "Paramount Channel", "Кириллица",
-                    "AniPLague", "Видеосервис", "JoyStudio", "HighHopes", "TVShows", "AniFilm", "GostFilm", "West Video", "Формат AB", "Film Prestige", "West Video", "Екатеринбург Арт", "SovetRomantica", "РуФилмс",
-                    "AveBrasil", "Greb&Creative", "BTI Studios", "Пифагор", "Eurochannel", "NewStudio", "Кармен Видео", "Кошкин", "Кравец", "Rainbow World", "Воротилин", "Варус-Видео", "ClubFATE", "HiWay Grope",
-                    "Banyan Studio", "Mallorn Studio", "Asian Miracle Group", "Эй Би Видео", "AniStar", "Korean Craze", "LakeFilms", "Невафильм", "Hallmark", "Netflix", "Mallorn Studio", "Sony Channel", "East Dream",
-                    "Bonsai Studio", "Lucky Production", "Octopus", "TUMBLER Studio", "CrazyCatStudio", "Amber", "Train Studio", "Анастасия Гайдаржи", "Мадлен Дюваль", "Fox Life", "Sound Film", "Cowabunga Studio", "Фильмэкспорт",
-                    "VO-Production", "Sound Film", "Nickelodeon", "MixFilm", "GreenРай Studio", "Sound-Group", "Back Board Cinema", "Кирилл Сагач", "Bonsai Studio", "Stevie", "OnisFilms", "MaxMeister", "Syfy Universal",
-                    "TUMBLER Studio", "NewStation", "Neo-Sound", "Муравский", "IdeaFilm", "Рутилов", "Тимофеев", "Лагута", "Дьяконов", "Zone Vision Studio", "Onibaku", "AniMaunt", "Voice Project", "AniStar", "Пифагор",
-                    "VoicePower", "StudioFilms", "Elysium", "AniStar", "BeniAffet", "Selena International", "Paul Bunyan", "CoralMedia", "Кондор", "Игмар", "ViP Premiere", "FireDub", "AveTurk", "Sony Sci-Fi", "Янкелевич",
-                    "Киреев", "Багичев", "2x2", "Лексикон", "Нота", "Arisu", "Superbit", "AveDorama", "VideoBIZ", "Киномания", "DDV", "Alternative Production", "WestFilm", "Анастасия Гайдаржи + Андрей Юрченко", "Киномания",
-                    "Agatha Studdio", "GreenРай Studio", "VSI Moscow", "Horizon Studio", "Flarrow Films", "Amazing Dubbing", "Asian Miracle Group", "Видеопродакшн", "VGM Studio", "FocusX", "CBS Drama", "NovaFilm", "Novamedia",
-                    "East Dream", "Дасевич", "Анатолий Гусев", "Twister", "Морозов", "NewComers", "kubik&ko", "DeMon", "Анатолий Ашмарин", "Inter Video", "Пронин", "AMC", "Велес", "Volume-6 Studio", "Хоррор Мэйкер",
-                    "Ghostface", "Sephiroth", "Акира", "Деваль Видео", "RussianGuy27", "neko64", "Shaman", "Franek Monk", "Ворон", "Andre1288", "Selena International", "GalVid", "Другое кино", "Студия NLS", "Sam2007",
-                    "HaseRiLLoPaW", "Севастьянов", "D.I.M.", "Марченко", "Журавлев", "Н-Кино", "Lazer Video", "SesDizi", "Red Media", "Рудой", "Товбин", "Сергей Дидок", "Хуан Рохас", "binjak", "Карусель", "Lizard Cinema",
-                    "Варус-Видео", "Акцент", "RG.Paravozik", "Max Nabokov", "Barin101", "Васька Куролесов", "Фортуна-Фильм", "Amalgama", "AnyFilm", "Студия Райдо", "Козлов", "Zoomvision Studio", "Пифагор", "Urasiko",
-                    "VIP Serial HD", "НСТ", "Кинолюкс", "Project Web Mania", "Завгородний", "AB-Video", "Twister", "Universal Channel", "Wakanim", "SnowRecords", "С.Р.И", "Старый Бильбо", "Ozz.tv", "Mystery Film", "РенТВ",
-                    "Латышев", "Ващенко", "Лайко", "Сонотек", "Psychotronic", "DIVA Universal", "Gremlin Creative Studio", "Нева-1", "Максим Жолобов", "Good People", "Мобильное телевидение", "Lazer Video",
-                    "IVI", "DoubleRec", "Milvus", "RedDiamond Studio", "Astana TV", "Никитин", "КТК", "D2Lab", "НСТ", "DoubleRec", "Black Street Records", "Останкино", "TatamiFilm", "Видеобаза", "Crunchyroll", "Novamedia",
-                    "RedRussian1337", "КонтентикOFF", "Creative Sound", "HelloMickey Production", "Пирамида", "CLS Media", "Сонькин", "Мастер Тэйп", "Garsu Pasaulis", "DDV", "IdeaFilm", "Gold Cinema", "Че!", "Нарышкин",
-                    "Intra Communications", "OnisFilms", "XDUB Dorama", "Кипарис", "Королёв", "visanti-vasaer", "Готлиб", "Paramount Channel", "СТС", "диктор CDV", "Pazl Voice", "Прямостанов", "Zerzia", "НТВ", "MGM",
-                    "Дьяков", "Вольга", "АРК-ТВ Studio", "Дубровин", "МИР", "Netflix", "Jetix", "Кипарис", "RUSCICO", "Seoul Bay", "Филонов", "Махонько", "Строев", "Саня Белый", "Говинда Рага", "Ошурков", "Horror Maker",
-                    "Хлопушка", "Хрусталев", "Антонов Николай", "Золотухин", "АрхиАзия", "Попов", "Ultradox", "Мост-Видео", "Альтера Парс", "Огородников", "Твин", "Хабар", "AimaksaLTV", "ТНТ", "FDV", "3df voice",
-                    "The Kitchen Russia", "Ульпаней Эльром", "Видеоимпульс", "GoodTime Media", "Alezan", "True Dubbing Studio", "FDV", "Карусель", "Интер", "Contentica", "Мельница", "RealFake", "ИДДК", "Инфо-фильм",
-                    "Мьюзик-трейд", "Кирдин | Stalk", "ДиоНиК", "Стасюк", "TV1000", "Hallmark", "Тоникс Медиа", "Бессонов", "Gears Media", "Бахурани", "NewDub", "Cinema Prestige", "Набиев", "New Dream Media", "ТВ3",
-                    "Малиновский Сергей", "Superbit", "Кенс Матвей", "LE-Production", "Voiz", "Светла", "Cinema Prestige", "JAM", "LDV", "Videogram", "Индия ТВ", "RedDiamond Studio", "Герусов", "Элегия фильм", "Nastia",
-                    "Семыкина Юлия", "Электричка", "Штамп Дмитрий", "Пятница", "Oneinchnales", "Gravi-TV", "D2Lab", "Кинопремьера", "Бусов Глеб", "LE-Production", "1001cinema", "Amazing Dubbing", "Emslie",
-                    "1+1", "100 ТВ", "1001 cinema", "2+2", "2х2", "3df voice", "4u2ges", "5 канал", "A. Lazarchuk", "AAA-Sound", "AB-Video", "AdiSound", "ALEKS KV", "AlexFilm", "AlphaProject", "Alternative Production",
-                    "Amalgam", "AMC", "Amedia", "AMS", "Andy", "AniLibria", "AniMedia", "Animegroup", "Animereactor", "AnimeSpace Team", "Anistar", "AniUA", "AniWayt", "Anything-group", "AOS",
-                    "Arasi project", "ARRU Workshop", "AuraFilm", "AvePremier", "AveTurk", "AXN Sci-Fi", "Azazel", "AzOnFilm", "BadBajo", "BadCatStudio", "BBC Saint-Petersburg", "BD CEE", "Black Street Records",
-                    "Bonsai Studio", "Boльгa", "Brain Production", "BraveSound", "BTI Studios", "Bubble Dubbing Company", "Byako Records", "Cactus Team", "Cartoon Network", "CBS Drama", "CDV", "Cinema Prestige",
-                    "CinemaSET GROUP", "CinemaTone", "ColdFilm", "Contentica", "CP Digital", "CPIG", "Crunchyroll", "Cuba77", "D1", "D2lab", "datynet", "DDV", "DeadLine", "DeadSno", "DeMon", "den904", "Description",
-                    "DexterTV", "Dice", "Discovery", "DniproFilm", "DoubleRec", "DreamRecords", "DVD Classic", "East Dream", "Eladiel", "Elegia", "ELEKTRI4KA", "Elrom", "ELYSIUM", "Epic Team", "eraserhead", "erogg",
-                    "Eurochannel", "Extrabit", "F-TRAIN", "Family Fan Edition", "FDV", "FiliZa Studio", "Film Prestige", "FilmGate", "FilmsClub", "FireDub", "Flarrow Films", "Flux-Team", "FocusStudio", "FOX", "Fox Crime",
-                    "Fox Russia", "FoxLife", "Foxlight", "Franek Monk", "Gala Voices", "Garsu Pasaulis", "Gears Media", "Gemini", "General Film", "GetSmart", "Gezell Studio", "Gits", "GladiolusTV", "GoldTeam", "Good People",
-                    "Goodtime Media", "GoodVideo", "GostFilm", "Gramalant", "Gravi-TV", "GREEN TEA", "GreenРай Studio", "Gremlin Creative Studio", "Hallmark", "HamsterStudio", "HiWay Grope", "Horizon Studio", "hungry_inri",
-                    "ICG", "ICTV", "IdeaFilm", "IgVin &amp; Solncekleshka", "ImageArt", "INTERFILM", "Ivnet Cinema", "IНТЕР", "Jakob Bellmann", "JAM", "Janetta", "Jaskier", "JeFerSon", "jept", "JetiX", "Jetvis", "JimmyJ",
-                    "KANSAI", "KIHO", "kiitos", "KinoGolos", "Kinomania", "KosharaSerials", "Kолобок", "L0cDoG", "LakeFilms", "LDV", "LE-Production", "LeDoyen", "LevshaFilm", "LeXiKC", "Liga HQ", "Line", "Lisitz",
-                    "Lizard Cinema Trade", "Lord32x", "lord666", "LostFilm", "Lucky Production", "Macross", "madrid", "Mallorn Studio", "Marclail", "Max Nabokov", "MC Entertainment", "MCA", "McElroy", "Mega-Anime",
-                    "Melodic Voice Studio", "metalrus", "MGM", "MifSnaiper", "Mikail", "Milirina", "MiraiDub", "MOYGOLOS", "MrRose", "MTV", "Murzilka", "MUZOBOZ", "National Geographic", "NemFilm", "Neoclassica", "NEON Studio",
-                    "New Dream Media", "NewComers", "NewStation", "NewStudio", "Nice-Media", "Nickelodeon", "No-Future", "NovaFilm", "Novamedia", "Octopus", "Oghra-Brown", "OMSKBIRD", "Onibaku", "OnisFilms", "OpenDub",
-                    "OSLIKt", "Ozz TV", "PaDet", "Paramount Comedy", "Paramount Pictures", "Parovoz Production", "PashaUp", "Paul Bunyan", "Pazl Voice", "PCB Translate", "Persona99", "PiratVoice", "Postmodern", "Profix Media",
-                    "Project Web Mania", "Prolix", "QTV", "R5", "Radamant", "RainDeath", "RATTLEBOX", "RealFake", "Reanimedia", "Rebel Voice", "RecentFilms", "Red Media", "RedDiamond Studio", "RedDog", "RedRussian1337",
-                    "Renegade Team", "RG Paravozik", "RinGo", "RoxMarty", "Rumble", "RUSCICO", "RusFilm", "RussianGuy27", "Saint Sound", "SakuraNight", "Satkur", "Sawyer888", "Sci-Fi Russia", "SDI Media", "Selena", "seqw0",
-                    "SesDizi", "SGEV", "Shachiburi", "SHIZA", "ShowJet", "Sky Voices", "SkyeFilmTV", "SmallFilm", "SmallFilm", "SNK-TV", "SnowRecords", "SOFTBOX", "SOLDLUCK2", "Solod", "SomeWax", "Sony Channel", "Sony Turbo",
-                    "Sound Film", "SpaceDust", "ssvss", "st.Elrom", "STEPonee", "SunshineStudio", "Superbit", "Suzaku", "sweet couple", "TatamiFilm", "TB5", "TF-AniGroup", "The Kitchen Russia", "The Mike Rec.", "Timecraft",
-                    "To4kaTV", "Tori", "Total DVD", "TrainStudio", "Troy", "True Dubbing Studio", "TUMBLER Studio", "turok1990", "TV 1000", "TVShows", "Twister", "Twix", "Tycoon", "Ultradox", "Universal Russia", "VashMax2",
-                    "VendettA", "VHS", "VicTeam", "VictoryFilms", "Video-BIZ", "Videogram", "ViruseProject", "visanti-vasaer", "VIZ Media", "VO-production", "Voice Project Studio", "VoicePower", "VSI Moscow", "VulpesVulpes",
-                    "Wakanim", "Wayland team", "WestFilm", "WiaDUB", "WVoice", "XL Media", "XvidClub Studio", "zamez", "ZEE TV", "Zendos", "ZM-SHOW", "Zone Studio", "Zone Vision", "Агапов", "Акопян", "Алексеев", "Артемьев",
-                    "Багичев", "Бессонов", "Васильев", "Васильцев", "Гаврилов", "Герусов", "Готлиб", "Григорьев", "Дасевич", "Дольский", "Карповский", "Кашкин", "Киреев", "Клюквин", "Костюкевич", "Матвеев", "Михалев", "Мишин",
-                    "Мудров", "Пронин", "Савченко", "Смирнов", "Тимофеев", "Толстобров", "Чуев", "Шуваев", "Яковлев", "ААА-sound", "АБыГДе", "Акалит", "Акира", "Альянс", "Амальгама", "АМС", "АнВад", "Анубис", "Anubis", "Арк-ТВ",
-                    "АРК-ТВ Studio", "Б. Федоров", "Бибиков", "Бигыч", "Бойков", "Абдулов", "Белов", "Вихров", "Воронцов", "Горчаков", "Данилов", "Дохалов", "Котов", "Кошкин", "Назаров", "Попов", "Рукин", "Рутилов",
-                    "Варус Видео", "Васька Куролесов", "Ващенко С.", "Векшин", "Велес", "Весельчак", "Видеоимпульс", "Витя «говорун»", "Войсовер", "Вольга", "Ворон", "Воротилин", "Г. Либергал", "Г. Румянцев", "Гей Кино Гид",
-                    "ГКГ", "Глуховский", "Гризли", "Гундос", "Деньщиков", "Есарев", "Нурмухаметов", "Пучков", "Стасюк", "Шадинский", "Штамп", "sf@irat", "Держиморда", "Домашний", "ДТВ", "Дьяконов", "Е. Гаевский", "Е. Гранкин",
-                    "Е. Лурье", "Е. Рудой", "Е. Хрусталёв", "ЕА Синема", "Екатеринбург Арт", "Живаго", "Жучков", "З Ранку До Ночі", "Завгородний", "Зебуро", "Зереницын", "И. Еремеев", "И. Клушин", "И. Сафронов", "И. Степанов",
-                    "ИГМ", "Игмар", "ИДДК", "Имидж-Арт", "Инис", "Ирэн", "Ист-Вест", "К. Поздняков", "К. Филонов", "К9", "Карапетян", "Кармен Видео", "Карусель", "Квадрат Малевича", "Килька",  "Кипарис", "Королев", "Котова",
-                    "Кравец", "Кубик в Кубе", "Кураж-Бамбей", "Л. Володарский", "Лазер Видео", "ЛанселаП", "Лапшин", "Лексикон", "Ленфильм", "Леша Прапорщик", "Лизард", "Люсьена", "Заугаров", "Иванов", "Иванова и П. Пашут",
-                    "Латышев", "Ошурков", "Чадов", "Яроцкий", "Максим Логинофф", "Малиновский", "Марченко", "Мастер Тэйп", "Махонько", "Машинский", "Медиа-Комплекс", "Мельница", "Мика Бондарик", "Миняев", "Мительман",
-                    "Мост Видео", "Мосфильм", "Муравский", "Мьюзик-трейд", "Н-Кино", "Н. Антонов", "Н. Дроздов", "Н. Золотухин", "Н.Севастьянов seva1988", "Набиев", "Наталья Гурзо", "НЕВА 1", "Невафильм", "НеЗупиняйПродакшн",
-                    "Неоклассика", "Несмертельное оружие", "НЛО-TV", "Новий", "Новый диск", "Новый Дубляж", "Новый Канал", "Нота", "НСТ", "НТВ", "НТН", "Оверлорд", "Огородников", "Омикрон", "Гланц", "Карцев", "Морозов",
-                    "Прямостанов", "Санаев", "Парадиз", "Пепелац", "Первый канал ОРТ", "Переводман", "Перец", "Петербургский дубляж", "Петербуржец", "Пирамида", "Пифагор", "Позитив-Мультимедиа", "Прайд Продакшн", "Премьер Видео",
-                    "Премьер Мультимедиа", "Причудики", "Р. Янкелевич", "Райдо", "Ракурс", "РенТВ", "Россия", "РТР", "Русский дубляж", "Русский Репортаж", "РуФилмс", "Рыжий пес", "С. Визгунов", "С. Дьяков", "С. Казаков",
-                    "С. Кузнецов", "С. Кузьмичёв", "С. Лебедев", "С. Макашов", "С. Рябов", "С. Щегольков", "С.Р.И.", "Сolumbia Service", "Самарский", "СВ Студия", "СВ-Дубль", "Светла", "Селена Интернешнл", "Синема Трейд",
-                    "Синема УС", "Синта Рурони", "Синхрон", "Советский", "Сокуров", "Солодухин", "Сонотек", "Сонькин", "Союз Видео", "Союзмультфильм", "СПД - Сладкая парочка", "Строев", "СТС", "Студии Суверенного Лепрозория",
-                    "Студия «Стартрек»", "KOleso", "Студия Горького", "Студия Колобок", "Студия Пиратского Дубляжа", "Студия Райдо", "Студия Трёх", "Гуртом", "Супербит", "Сыендук", "Так Треба Продакшн", "ТВ XXI век", "ТВ СПб",
-                    "ТВ-3", "ТВ6", "ТВИН", "ТВЦ", "ТВЧ 1", "ТНТ", "ТО Друзей", "Толмачев", "Точка Zрения", "Трамвай-фильм", "ТРК", "Уолт Дисней Компани", "Хихидок", "Хлопушка", "Цікава Ідея", "Четыре в квадрате", "Швецов",
-                    "Штамп", "Штейн", "Ю. Живов", "Ю. Немахов", "Ю. Сербин", "Ю. Товбин", "Я. Беллманн", "Украинский"
-                };
 
-                foreach (string v in allVoices)
+            if (Regex.IsMatch(titlelower, "( |x)(d|dub|дб|дуб|дубляж)(,| )"))
+                t.voices.Add("Дубляж");
+
+            foreach (string v in allVoices)
+            {
+                try
                 {
-                    try
+                    if (v.Length > 4 && titlelower.Contains(v.ToLower()))
+                        t.voices.Add(v);
+                }
+                catch { }
+            }
+
+            var streams = TracksDB.Get(t.magnet, t.types);
+            if (streams != null)
+            {
+                foreach (var s in streams)
+                {
+                    if (string.IsNullOrEmpty(s.tags?.title))
+                        continue;
+
+                    if (s.codec_type != "audio")
+                        continue;
+
+                    foreach (string v in allVoices)
                     {
-                        if (v.Length > 4 && t.title.ToLower().Contains(v.ToLower()))
-                            t.voices.Add(v);
+                        try
+                        {
+                            if (v.Length > 4 && s.tags.title.ToLower().Contains(v.ToLower()))
+                                t.voices.Add(v);
+
+                            if (Regex.IsMatch(s.tags.title.ToLower(), "( |x)(d|dub|дб|дуб|дубляж)(,| )"))
+                                t.voices.Add("Дубляж");
+                        }
+                        catch { }
                     }
-                    catch { }
+                }
+            }
+            #endregion
+
+            #region languages
+            t.languages = new HashSet<string>();
+
+            if (titlelower.Contains("ukr") || titlelower.Contains("українськ") || titlelower.Contains("украинск") || t.trackerName == "toloka")
+                t.languages.Add("ukr");
+
+            if (t.trackerName == "lostfilm")
+                t.languages.Add("rus");
+
+            if (!t.languages.Contains("ukr"))
+            {
+                foreach (string v in ukrVoices)
+                {
+                    if (t.voices.Contains(v))
+                    {
+                        t.languages.Add("ukr");
+                        break;
+                    }
+                }
+            }
+
+            if (!t.languages.Contains("rus"))
+            {
+                foreach (string v in rusVoices)
+                {
+                    if (t.voices.Contains(v))
+                    {
+                        t.languages.Add("rus");
+                        break;
+                    }
                 }
             }
             #endregion
@@ -455,5 +429,11 @@ namespace JacRed.Engine
             #endregion
         }
         #endregion
+
+        static HashSet<string> allVoices = new HashSet<string> { "Ozz", "Laci", "Kerob", "LE-Production", "Parovoz Production", "Paradox", "Omskbird", "LostFilm", "Причудики", "BaibaKo", "NewStudio", "AlexFilm", "FocusStudio", "Gears Media", "Jaskier", "ViruseProject", "Кубик в Кубе", "IdeaFilm", "Sunshine Studio", "Ozz.tv", "Hamster Studio", "Сербин", "To4ka", "Кравец", "Victory-Films", "SNK-TV", "GladiolusTV", "Jetvis Studio", "ApofysTeam", "ColdFilm", "Agatha Studdio", "KinoView", "Jimmy J.", "Shadow Dub Project", "Amedia", "Red Media", "Selena International", "Гоблин", "Universal Russia", "Kiitos", "Paramount Comedy", "Кураж-Бамбей", "Студия Пиратского Дубляжа", "Чадов", "Карповский", "RecentFilms", "Первый канал", "Alternative Production", "NEON Studio", "Колобок", "Дольский", "Синема УС", "Гаврилов", "Живов", "SDI Media", "Алексеев", "GreenРай Studio", "Михалев", "Есарев", "Визгунов", "Либергал", "Кузнецов", "Санаев", "ДТВ", "Дохалов", "Горчаков", "LevshaFilm", "CasStudio", "Володарский", "Шварко", "Карцев", "ETV+", "ВГТРК", "Gravi-TV", "1001cinema", "Zone Vision Studio", "Хихикающий доктор", "Murzilka", "turok1990", "FOX", "STEPonee", "Elrom", "HighHopes", "SoftBox", "NovaFilm", "Четыре в квадрате", "Greb&Creative", "MUZOBOZ", "ZM-Show", "Kerems13", "New Dream Media", "Игмар", "Котов", "DeadLine Studio", "РенТВ", "Андрей Питерский", "Fox Life", "Рыбин", "Trdlo.studio", "Studio Victory Аsia", "Ozeon", "НТВ", "CP Digital", "AniLibria", "Levelin", "FanStudio", "Cmert", "Интерфильм", "SunshineStudio", "Kulzvuk Studio", "Кашкин", "Вартан Дохалов", "Немахов", "Sedorelli", "СТС", "Яроцкий", "ICG", "ТВЦ", "Штейн", "AzOnFilm", "SorzTeam", "Гаевский", "Мудров", "Воробьев Сергей", "Студия Райдо", "DeeAFilm Studio", "zamez", "Иванов", "СВ-Дубль", "BadBajo", "Комедия ТВ", "Мастер Тэйп", "5-й канал СПб", "Гланц", "Ох! Студия", "СВ-Кадр", "2x2", "Котова", "Позитив", "RusFilm", "Назаров", "XDUB Dorama", "Реальный перевод", "Kansai", "Sound-Group", "Николай Дроздов", "ZEE TV", "MTV", "Сыендук", "GoldTeam", "Белов", "Dream Records", "Яковлев", "Vano", "SilverSnow", "Lord32x", "Filiza Studio", "Sony Sci-Fi", "Flux-Team", "NewStation", "DexterTV", "Good People", "AniDUB", "SHIZA Project", "AniLibria.TV", "StudioBand", "AniMedia", "Onibaku", "JWA Project", "MC Entertainment", "Oni", "Jade", "Ancord", "ANIvoice", "Nika Lenina", "Bars MacAdams", "JAM", "Anika", "Berial", "Kobayashi", "Cuba77", "RiZZ_fisher", "OSLIKt", "Lupin", "Ryc99", "Nazel & Freya", "Trina_D", "JeFerSon", "Vulpes Vulpes", "Hamster", "KinoGolos", "Fox Crime", "Денис Шадинский", "AniFilm", "Rain Death", "New Records", "Первый ТВЧ", "RG.Paravozik", "Profix Media", "Tycoon", "RealFake", "HDRezka", "Discovery", "Viasat History", "HiWayGrope", "GREEN TEA", "AlphaProject", "AnimeReactor", "Animegroup", "Shachiburi", "Persona99", "3df voice", "CactusTeam", "AniMaunt", "ShinkaDan", "ShowJet", "RAIM", "АрхиТеатр", "Project Web Mania", "ko136", "КураСгречей", "AMS", "СВ-Студия", "Храм Дорам ТВ", "TurkStar", "Медведев", "Рябов", "BukeDub", "FilmGate", "FilmsClub", "Sony Turbo", "AXN Sci-Fi", "DIVA Universal", "Курдов", "Неоклассика", "fiendover", "SomeWax", "Логинофф", "Cartoon Network", "Loginoff", "CrezaStudio", "Воротилин", "LakeFilms", "Andy", "XDUB Dorama + Колобок", "KosharaSerials", "Екатеринбург Арт", "Julia Prosenuk", "АРК-ТВ Studio", "Т.О Друзей", "Animedub", "Paramount Channel", "Кириллица", "AniPLague", "Видеосервис", "JoyStudio", "TVShows", "GostFilm", "West Video", "Формат AB", "Film Prestige", "SovetRomantica", "РуФилмс", "AveBrasil", "BTI Studios", "Пифагор", "Eurochannel", "Кармен Видео", "Кошкин", "Rainbow World", "Варус-Видео", "ClubFATE", "HiWay Grope", "Banyan Studio", "Mallorn Studio", "Asian Miracle Group", "Эй Би Видео", "AniStar", "Korean Craze", "Невафильм", "Hallmark", "Sony Channel", "East Dream", "Bonsai Studio", "Lucky Production", "Octopus", "TUMBLER Studio", "CrazyCatStudio", "Amber", "Train Studio", "Анастасия Гайдаржи", "Мадлен Дюваль", "Sound Film", "Cowabunga Studio", "Фильмэкспорт", "VO-Production", "Nickelodeon", "MixFilm", "Back Board Cinema", "Кирилл Сагач", "Stevie", "OnisFilms", "MaxMeister", "Syfy Universal", "Neo-Sound", "Муравский", "Рутилов", "Тимофеев", "Лагута", "Дьяконов", "Voice Project", "VoicePower", "StudioFilms", "Elysium", "BeniAffet", "Paul Bunyan", "CoralMedia", "Кондор", "ViP Premiere", "FireDub", "AveTurk", "Янкелевич", "Киреев", "Багичев", "Лексикон", "Нота", "Arisu", "Superbit", "AveDorama", "VideoBIZ", "Киномания", "DDV", "WestFilm", "Анастасия Гайдаржи + Андрей Юрченко", "VSI Moscow", "Horizon Studio", "Flarrow Films", "Amazing Dubbing", "Видеопродакшн", "VGM Studio", "FocusX", "CBS Drama", "Novamedia", "Дасевич", "Анатолий Гусев", "Twister", "Морозов", "NewComers", "kubik&ko", "DeMon", "Анатолий Ашмарин", "Inter Video", "Пронин", "AMC", "Велес", "Volume-6 Studio", "Хоррор Мэйкер", "Ghostface", "Sephiroth", "Акира", "Деваль Видео", "RussianGuy27", "neko64", "Shaman", "Franek Monk", "Ворон", "Andre1288", "GalVid", "Другое кино", "Студия NLS", "Sam2007", "HaseRiLLoPaW", "Севастьянов", "D.I.M.", "Марченко", "Журавлев", "Н-Кино", "Lazer Video", "SesDizi", "Рудой", "Товбин", "Сергей Дидок", "Хуан Рохас", "binjak", "Карусель", "Lizard Cinema", "Акцент", "Max Nabokov", "Barin101", "Васька Куролесов", "Фортуна-Фильм", "Amalgama", "AnyFilm", "Козлов", "Zoomvision Studio", "Urasiko", "VIP Serial HD", "НСТ", "Кинолюкс", "Завгородний", "AB-Video", "Universal Channel", "Wakanim", "SnowRecords", "С.Р.И", "Старый Бильбо", "Mystery Film", "Латышев", "Ващенко", "Лайко", "Сонотек", "Psychotronic", "Gremlin Creative Studio", "Нева-1", "Максим Жолобов", "Мобильное телевидение", "IVI", "DoubleRec", "Milvus", "RedDiamond Studio", "Astana TV", "Никитин", "КТК", "D2Lab", "Black Street Records", "Останкино", "TatamiFilm", "Видеобаза", "Crunchyroll", "RedRussian1337", "КонтентикOFF", "Creative Sound", "HelloMickey Production", "Пирамида", "CLS Media", "Сонькин", "Garsu Pasaulis", "Gold Cinema", "Че!", "Нарышкин", "Intra Communications", "Кипарис", "Королёв", "visanti-vasaer", "Готлиб", "диктор CDV", "Pazl Voice", "Прямостанов", "Zerzia", "MGM", "Дьяков", "Вольга", "Дубровин", "МИР", "Jetix", "RUSCICO", "Seoul Bay", "Филонов", "Махонько", "Строев", "Саня Белый", "Говинда Рага", "Ошурков", "Horror Maker", "Хлопушка", "Хрусталев", "Антонов Николай", "Золотухин", "АрхиАзия", "Попов", "Ultradox", "Мост-Видео", "Альтера Парс", "Огородников", "Твин", "Хабар", "AimaksaLTV", "ТНТ", "FDV", "The Kitchen Russia", "Ульпаней Эльром", "Видеоимпульс", "GoodTime Media", "Alezan", "True Dubbing Studio", "Интер", "Contentica", "Мельница", "ИДДК", "Инфо-фильм", "Мьюзик-трейд", "Кирдин | Stalk", "ДиоНиК", "Стасюк", "TV1000", "Тоникс Медиа", "Бессонов", "Бахурани", "NewDub", "Cinema Prestige", "Набиев", "ТВ3", "Малиновский Сергей", "Кенс Матвей", "Voiz", "Светла", "LDV", "Videogram", "Индия ТВ", "Герусов", "Элегия фильм", "Nastia", "Семыкина Юлия", "Электричка", "Штамп Дмитрий", "Пятница", "Oneinchnales", "Кинопремьера", "Бусов Глеб", "Emslie", "1+1", "100 ТВ", "1001 cinema", "2+2", "2х2", "4u2ges", "5 канал", "A. Lazarchuk", "AAA-Sound", "AdiSound", "ALEKS KV", "Amalgam", "AnimeSpace Team", "AniUA", "AniWayt", "Anything-group", "AOS", "Arasi project", "ARRU Workshop", "AuraFilm", "AvePremier", "Azazel", "BadCatStudio", "BBC Saint-Petersburg", "BD CEE", "Boльгa", "Brain Production", "BraveSound", "Bubble Dubbing Company", "Byako Records", "Cactus Team", "CDV", "CinemaSET GROUP", "CinemaTone", "CPIG", "D1", "datynet", "DeadLine", "DeadSno", "den904", "Description", "Dice", "DniproFilm", "DreamRecords", "DVD Classic", "Eladiel", "Elegia", "ELEKTRI4KA", "Epic Team", "eraserhead", "erogg", "Extrabit", "F-TRAIN", "Family Fan Edition", "Fox Russia", "FoxLife", "Foxlight", "Gala Voices", "Gemini", "General Film", "GetSmart", "Gezell Studio", "Gits", "GoodVideo", "Gramalant", "HamsterStudio", "hungry_inri", "ICTV", "IgVin &amp; Solncekleshka", "ImageArt", "INTERFILM", "Ivnet Cinema", "IНТЕР", "Jakob Bellmann", "Janetta", "jept", "Jetvis", "JimmyJ", "KIHO", "Kinomania", "Kолобок", "L0cDoG", "LeDoyen", "LeXiKC", "Liga HQ", "Line", "Lisitz", "Lizard Cinema Trade", "lord666", "Macross", "madrid", "Marclail", "MCA", "McElroy", "Mega-Anime", "Melodic Voice Studio", "metalrus", "MifSnaiper", "Mikail", "Milirina", "MiraiDub", "MOYGOLOS", "MrRose", "National Geographic", "NemFilm", "Neoclassica", "Nice-Media", "No-Future", "Oghra-Brown", "OpenDub", "Ozz TV", "PaDet", "Paramount Pictures", "PashaUp", "PCB Translate", "PiratVoice", "Postmodern", "Prolix", "QTV", "R5", "Radamant", "RainDeath", "RATTLEBOX", "Reanimedia", "Rebel Voice", "RedDog", "Renegade Team", "RG Paravozik", "RinGo", "RoxMarty", "Rumble", "Saint Sound", "SakuraNight", "Satkur", "Sawyer888", "Sci-Fi Russia", "Selena", "seqw0", "SGEV", "SHIZA", "Sky Voices", "SkyeFilmTV", "SmallFilm", "SOLDLUCK2", "Solod", "SpaceDust", "ssvss", "st.Elrom", "Suzaku", "sweet couple", "TB5", "TF-AniGroup", "The Mike Rec.", "Timecraft", "To4kaTV", "Tori", "Total DVD", "TrainStudio", "Troy", "TV 1000", "Twix", "VashMax2", "VendettA", "VHS", "VicTeam", "VictoryFilms", "Video-BIZ", "VIZ Media", "Voice Project Studio", "VulpesVulpes", "Wayland team", "WiaDUB", "WVoice", "XL Media", "XvidClub Studio", "Zendos", "Zone Studio", "Zone Vision", "Агапов", "Акопян", "Артемьев", "Васильев", "Васильцев", "Григорьев", "Клюквин", "Костюкевич", "Матвеев", "Мишин", "Савченко", "Смирнов", "Толстобров", "Чуев", "Шуваев", "ААА-sound", "АБыГДе", "Акалит", "Альянс", "Амальгама", "АМС", "АнВад", "Анубис", "Anubis", "Арк-ТВ", "Б. Федоров", "Бибиков", "Бигыч", "Бойков", "Абдулов", "Вихров", "Воронцов", "Данилов", "Рукин", "Варус Видео", "Ващенко С.", "Векшин", "Весельчак", "Витя <говорун>", "Войсовер", "Г. Либергал", "Г. Румянцев", "Гей Кино Гид", "ГКГ", "Глуховский", "Гризли", "Гундос", "Деньщиков", "Нурмухаметов", "Пучков", "Шадинский", "Штамп", "sf@irat", "Держиморда", "Домашний", "Е. Гаевский", "Е. Гранкин", "Е. Лурье", "Е. Рудой", "Е. Хрусталёв", "ЕА Синема", "Живаго", "Жучков", "З Ранку До Ночі", "Зебуро", "Зереницын", "И. Еремеев", "И. Клушин", "И. Сафронов", "И. Степанов", "ИГМ", "Имидж-Арт", "Инис", "Ирэн", "Ист-Вест", "К. Поздняков", "К. Филонов", "К9", "Карапетян", "Квадрат Малевича", "Килька", "Королев", "Л. Володарский", "Лазер Видео", "ЛанселаП", "Лапшин", "Ленфильм", "Леша Прапорщик", "Лизард", "Люсьена", "Заугаров", "Иванова и П. Пашут", "Максим Логинофф", "Малиновский", "Машинский", "Медиа-Комплекс", "Мика Бондарик", "Миняев", "Мительман", "Мост Видео", "Мосфильм", "Н. Антонов", "Н. Дроздов", "Н. Золотухин", "Н.Севастьянов seva1988", "Наталья Гурзо", "НЕВА 1", "НеЗупиняйПродакшн", "Несмертельное оружие", "НЛО-TV", "Новый диск", "Новый Дубляж", "НТН", "Оверлорд", "Омикрон", "Парадиз", "Пепелац", "Первый канал ОРТ", "Переводман", "Перец", "Петербургский дубляж", "Петербуржец", "Позитив-Мультимедиа", "Прайд Продакшн", "Премьер Видео", "Премьер Мультимедиа", "Р. Янкелевич", "Райдо", "Ракурс", "Россия", "РТР", "Русский дубляж", "Русский Репортаж", "Рыжий пес", "С. Визгунов", "С. Дьяков", "С. Казаков", "С. Кузнецов", "С. Кузьмичёв", "С. Лебедев", "С. Макашов", "С. Рябов", "С. Щегольков", "С.Р.И.", "Сolumbia Service", "Самарский", "СВ Студия", "Селена Интернешнл", "Синема Трейд", "Синта Рурони", "Синхрон", "Советский", "Сокуров", "Солодухин", "Союз Видео", "Союзмультфильм", "СПД - Сладкая парочка", "Студии Суверенного Лепрозория", "Студия <Стартрек>", "KOleso", "Студия Горького", "Студия Колобок", "Студия Трёх", "Гуртом", "Супербит", "Так Треба Продакшн", "ТВ XXI век", "ТВ СПб", "ТВ-3", "ТВ6", "ТВЧ 1", "ТО Друзей", "Толмачев", "Точка Zрения", "Трамвай-фильм", "ТРК", "Уолт Дисней Компани", "Хихидок", "Цікава ідея", "Швецов", "Ю. Живов", "Ю. Немахов", "Ю. Сербин", "Ю. Товбин", "Я. Беллманн", "RHS", "Red Head Sound", "Postmodern Postproduction", "MelodicVoiceStudio", "FanVoxUA", "UkraineFastDUB", "UFDUB", "CHAS.UA", "Струґачка", "StorieS man", "UATeam", "UkrDub", "UAVoice", "Три крапки", "Сокира", "FlameStudio", "HATOSHI", "SkiDub", "Sengoku", "AdrianZP", "Cikava Ideya", "КiT", "Inter", "NLO", "ТакТребаПродакшн", "Новий Канал", "BambooUA", "Тоніс", "UA-DUB", "ТеТ", "СТБ", "НЛО", "Колодій", "В одне рило", "інтер", "DubLiCat", "AAASound", "НеЗупиняйПродакшн", "Омікрон", "Omicron", "Omikron", "3 крапки", "Tak Treba Production", "TET", "ПлюсПлюс", "Дніпрофільм", "ArtymKo", "Cinemaker", "sweet.tv", "DreamCast" };
+
+        static HashSet<string> rusVoices = new HashSet<string> { "LostFilm", "Горчаков", "Кириллица", "TVShows", "datynet", "Gears Media", "Ленфильм", "Пифагор", "Jaskier", "Сербин", "Ю. Сербин", "Superbit", "Гланц", "Королев", "Мосфильм", "Яроцкий", "Немахов", "Ю. Немахов", "Визгунов", "Премьер Мультимедиа", "СВ-Дубль", "Рябов", "Яковлев", "Велес", "Хлопушка", "Марченко", "Живов", "Либергал", "Г. Либергал", "Tycoon", "1001cinema", "1001 cinema", "FOX", "LakeFilms", "zamez", "SNK-TV", "С. Визгунов", "SDI Media", "Первый канал", "NewComers", "Гоблин", "Карусель", "Иванов", "Карповский", "Twister", "ДТВ", "ТВЦ", "НТВ", "Королёв", "Ю. Живов", "Видеосервис", "Санаев", "Варус Видео", "Кашкин", "Кубик в Кубе", "Варус-Видео", "BadBajo", "Flarrow Films", "Нева-1", "Пучков", "Pazl Voice", "Есарев", "Завгородний", "Латышев", "Red Head Sound", "Чадов", "Союз Видео", "Film Prestige", "Михалев", "Кравец", "GREEN TEA", "Позитив", "Позитив-Мультимедиа", "ТВ3", "Карцев", "CactusTeam", "Cactus Team", "D2Lab", "Vano", "Воротилин", "Супербит", "С. Рябов", "STEPonee", "DeadSno", "den904", "Back Board Cinema", "AlexFilm", "Рутилов", "Zone Vision", "Смирнов", "Янкелевич", "Колобок", "NewStation", "MUZOBOZ", "Алексеев", "NewStudio", "RusFilm", "2x2", "VO-Production", "Ivnet Cinema", "Володарский", "Дохалов", "Вартан Дохалов", "Медведев", "Amedia", "Novamedia", "TV1000", "TV 1000", "Мика Бондарик", "Amalgama", "Amalgam", "Дьяконов", "Игмар", "ИГМ", "ВГТРК", "Л. Володарский", "Гаевский", "Е. Гаевский", "Garsu Pasaulis", "Кузнецов", "Премьер Видео", "AB-Video", "CP Digital", "Селена Интернешнл", "Махонько", "GoodTime Media", "Рукин", "НСТ", "Филонов", "Деваль Видео", "Екатеринбург Арт", "DoubleRec", "Твин", "Синхрон", "Русский дубляж", "СТС", "ViruseProject", "ТВ-3", "Ворон", "АрхиАзия", "Светла", "Котов", "West Video", "IdeaFilm", "С.Р.И", "С.Р.И.", "Кипарис", "С. Кузнецов", "BTI Studios", "NovaFilm", "Horror Maker", "ТНТ", "Огородников", "Б. Федоров", "ICG", "Solod", "ColdFilm", "ViP Premiere", "CinemaTone", "FDV", "RussianGuy27", "Hamster", "AMS", "РТР", "Багичев", "JimmyJ", "Cinema Prestige", "RHS", "AniMaunt", "Штейн", "Амальгама", "Пирамида", "Н. Антонов", "Товбин", "Ю. Товбин", "Матвеев", "Советский", "Кармен Видео", "Paradox", "ZM-Show", "Saint Sound", "Попов", "GladiolusTV", "RUSCICO", "RealFake", "SesDizi", "Мишин", "Киреев", "Good People", "Мост-Видео", "Сонькин", "AlphaProject", "Останкино", "DDV", "Назаров", "Пронин", "FocusStudio", "Хрусталев", "SomeWax", "Строев", "Дасевич", "Лазер Видео", "К. Поздняков", "Весельчак", "Прямостанов", "Видеопродакшн", "Логинофф", "Максим Логинофф", "Козлов", "Ващенко", "СВ Студия", "ETV+", "диктор CDV", "CDV", "Кондор", "Мост Видео", "Gemini", "Lucky Production", "Дубровин", "ShowJet", "lord666", "Солодухин", "Gravi-TV", "Gramalant", "Акцент", "seqw0", "Profix Media", "АРК-ТВ", "Mallorn Studio", "Причудики", "Sawyer888", "Ист-Вест", "FanStudio", "CrazyCatStudio", "PashaUp", "Сонотек", "Синта Рурони", "Видеоимпульс", "Белов", "Сыендук", "Sony Turbo", "РенТВ", "Инис", "Воронцов", "Р. Янкелевич", "Zone Vision Studio", "Anubis", "Ошурков", "Asian Miracle Group", "Sephiroth", "Вихров", "Elrom", "Русский Репортаж", "SoftBox", "DIVA Universal", "Hallmark", "Другое кино", "SkyeFilmTV", "Е. Гранкин", "Levelin", "Omskbird", "Синема УС", "Герусов", "New Dream Media", "RAIM", "Кураж-Бамбей", "Фильмэкспорт", "Савченко", "Парадиз", "Севастьянов", "Васильев", "SHIZA", "Рудой", "Е. Рудой", "CBS Drama", "Толстобров", "Lord32x", "Bonsai Studio", "KosharaSerials", "Selena", "Дьяков", "HiWayGrope", "HiWay Grope", "BraveSound", "Синема Трейд", "CPIG", "Ирэн", "Котова", "Н-Кино", "Andy", "Лагута", "Райдо", "AniPLague", "AdiSound", "visanti-vasaer", "Держиморда", "GreenРай Studio", "ZEE TV", "VoicePower", "Хуан Рохас", "Фортуна-Фильм", "Войсовер", "Ozz.tv", "Векшин", "RATTLEBOX", "Ракурс", "Radamant", "RecentFilms", "Anika", "True Dubbing Studio", "Штамп", "BadCatStudio", "Kiitos", "VictoryFilms", "Кошкин", "SpaceDust", "DeMon", "sf@irat", "Данилов", "Переводман", "Nice-Media", "Никитин", "Акира", "Я. Беллманн", "С. Дьяков", "Новый диск", "ALEKS KV", "Videogram", "Морозов", "Хоррор Мэйкер", "CinemaSET GROUP", "Деньщиков", "Мобильное телевидение", "ИДДК", "Intra Communications", "Петербуржец", "Greb&Creative", "Стасюк", "СВ-Кадр", "Готлиб", "Тоникс Медиа", "fiendover", "RoxMarty", "Project Web Mania", "Золотухин", "madrid", "Нурмухаметов", "Lazer Video", "OnisFilms", "FilmGate", "JAM", "Григорьев", "Ульпаней Эльром", "Мудров", "Альянс", "Filiza Studio", "XDUB Dorama", "Жучков", "eraserhead", "Комедия ТВ", "Леша Прапорщик", "WestFilm", "Швецов", "Хихидок", "The Kitchen Russia", "Psychotronic", "ДиоНиК", "PiratVoice", "Штамп Дмитрий", "Red Media", "Саня Белый", "Мельница", "Бибиков", "Urasiko", "XL Media", "kubik&ko", "Jakob Bellmann", "Зереницын", "Мастер Тэйп", "Лизард", "Agatha Studdio", "MOYGOLOS", "Нарышкин", "Franek Monk", "Train Studio", "TrainStudio", "D.I.M.", "AniStar", "Клюквин", "Бойков", "Voiz", "Amber", "MrRose", "AniLibria", "RG.Paravozik", "Гей Кино Гид", "НЕВА 1", "Машинский", "Т.О Друзей", "Cmert", "Parovoz Production", "VideoBIZ", "Oneinchnales", "Васька Куролесов", "Живаго", "Lizard Cinema", "Lizard Cinema Trade", "Ghostface", "РуФилмс", "Kansai", "АнВад", "Liga HQ", "AniMedia", "Reanimedia", "LeXiKC", "Зебуро", "Артемьев", "Самарский", "Перец", "To4ka", "Лексикон", "McElroy", "Муравский", "Zerzia", "Первый канал ОРТ", "RedDiamond Studio", "Sky Voices", "Creative Sound", "Jetvis Studio", "Jetvis", "CLS Media", "СВ-Студия", "Васильцев", "MGM", "L0cDoG", "RedRussian1337", "Black Street Records", "Видеобаза", "С. Макашов", "Mystery Film", "Arasi project", "Петербургский дубляж", "Толмачев", "Kerob", "SorzTeam", "Flux-Team", "Трамвай-фильм", "NemFilm", "Эй Би Видео", "Alternative Production", "Кинопремьера", "Wayland team", "Первый ТВЧ", "AuraFilm", "Gala Voices", "Sunshine Studio", "SunshineStudio", "GostFilm", "Точка Zрения", "Cowabunga Studio", "AzOnFilm", "AniDUB", "Murzilka", "MaxMeister", "ЕА Синема", "Contentica", "К. Филонов", "Tori", "Inter Video", "Victory-Films", "Тимофеев", "Студия NLS", "Храм Дорам ТВ", "Е. Хрусталёв", "Карапетян", "Наталья Гурзо", "Janetta", "Universal Russia", "HighHopes", "Чуев", "Voice Project", "Emslie", "Lisitz", "Barin101", "Animegroup", "Dream Records", "DreamRecords", "Имидж-Арт", "ko136", "Nastia", "Медиа-Комплекс", "Sound-Group", "Малиновский", "sweet couple", "Sam2007", "SnowRecords", "Horizon Studio", "Family Fan Edition", "TatamiFilm", "Николай Дроздов", "Ultradox", "ImageArt", "Квадрат Малевича", "binjak", "Инфо-фильм", "Мьюзик-трейд", "Сolumbia Service", "Extrabit", "Andre1288", "Максим Жолобов", "turok1990", "Уолт Дисней Компани", "RedDog", "Хабар", "neko64", "Gremlin Creative Studio", "VGM Studio", "Иванова и П. Пашут", "Н. Золотухин", "Костюкевич", "Video-BIZ", "Акалит", "Byako Records", "Агапов", "Мительман", "Persona99", "East Dream", "Epic Team", "VicTeam", "ЛанселаП", "Студия Горького", "Бигыч", "AvePremier", "Jade", "Cuba77", "MifSnaiper", "И. Еремеев", "Акопян", "ssvss", "Индия ТВ", "GoldTeam", "Альтера Парс", "Eurochannel", "OSLIKt", "Eladiel", "TF-AniGroup", "Boльгa", "Azazel", "Студия Пиратского Дубляжа", "FireDub", "XvidClub Studio", "Foxlight", "Гундос", "Paul Bunyan", "OpenDub", "Бахурани", "Абдулов", "The Mike Rec.", "Заугаров", "Amazing Dubbing", "Сергей Дидок", "Студия Колобок", "Ancord", "Анатолий Ашмарин", "Бессонов", "Sedorelli", "DexterTV", "Прайд Продакшн", "AveTurk", "MC Entertainment", "Loginoff", "JoyStudio", "Старый Бильбо", "ГКГ", "NEON Studio", "st.Elrom", "Max Nabokov", "Sound Film", "Twix", "Zone Studio" };
+
+        static HashSet<string> ukrVoices = new HashSet<string> { "QTV", "DniproFilm", "AdrianZP", "LeDoyen", "Цікава Ідея", "Cikava Ideya", "КiT", "Inter", "NLO", "Так Треба Продакшн", "ТакТребаПродакшн", "Новий Канал", "Новый Канал", "BambooUA", "ICTV", "Тоніс", "UA-DUB", "ТеТ", "СТБ", "Postmodern", "НЛО", "Колодій", "В одне рило", "SkiDUB", "Інтер", "DubLiCat", "AAA-Sound", "AAASound", "НеЗупиняйПродакшн", "НеЗупиняйПродакшн", "Ozz TV", "1+1", "Три Крапки", "3 крапки", "Tak Treba Production", "UAVoice", "Интер", "TET", "ПлюсПлюс", "Дніпрофільм", "ArtymKo", "Cinemaker", "sweet.tv", "MelodicVoiceStudio", "FanVoxUA", "UkraineFastDUB", "UFDUB", "CHAS.UA", "Струґачка", "StorieS man", "UATeam", "Гуртом", "UkrDub", "AniUA", "Сокира", "FlameStudio", "HATOSHI", "Sengoku" };
     }
 }

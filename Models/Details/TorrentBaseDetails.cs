@@ -1,4 +1,6 @@
-﻿using System;
+﻿using JacRed.Models.Tracks;
+using System;
+using System.Collections.Generic;
 
 namespace JacRed.Models.Details
 {
@@ -33,5 +35,10 @@ namespace JacRed.Models.Details
         public string originalname { get; set; }
 
         public int relased { get; set; }
+
+
+        public HashSet<string> languages { get; set; }
+
+        public List<ffStream> ffprobe { get; set; }
     }
 }

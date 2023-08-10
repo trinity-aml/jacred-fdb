@@ -2,7 +2,7 @@
 curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
 
 # Настройка парсера
-1. Настроить init.conf
+1. Настроить init.conf (пример настроек в example.conf)
 2. Перенести в crontab "Data/crontab" или указать сервер "syncapi" в init.conf 
 
 # Источники 

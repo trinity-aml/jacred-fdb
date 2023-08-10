@@ -142,7 +142,7 @@ namespace JacRed.Controllers.CRON
 
             var torrents = new List<TorrentBaseDetails>();
 
-            foreach (string row in Regex.Split(Regex.Replace(tParse.ReplaceBadNames(html).Split("</span></td></tr></table><b>")[0], "[\n\r\t]+", ""), "<tr class=\"(gai|tum)\">").Skip(1))
+            foreach (string row in Regex.Split(Regex.Replace(html, "[\n\r\t]+", ""), "<tr class=\"(gai|tum)\">").Skip(1))
             {
                 #region Локальный метод - Match
                 string Match(string pattern, int index = 1)
@@ -174,6 +174,9 @@ namespace JacRed.Controllers.CRON
                     continue;
 
                 if (cat == "17" && !title.Contains(" UKR"))
+                    continue;
+
+                if (title.Contains(" КПК"))
                     continue;
 
                 url = $"{AppInit.conf.Rutor.host}/{url}";

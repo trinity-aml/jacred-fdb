@@ -303,14 +303,15 @@ namespace JacRed.Controllers.CRON
                 {
                     #region Фильмы
                     // Бэд трип (Приколисты в дороге) / Bad Trip / 2020 / ДБ, СТ / WEB-DLRip (AVC)
+                    // Интерстеллар / Interstellar (IMAX Edition) / 2014 / ДБ / BDRip
                     // Успеть всё за месяц / 30 jours max / 2020 / ЛМ / WEB-DLRip
-                    var g = Regex.Match(title, "^([^\\(/]+) (\\([^\\)/]+\\) )?/ ([^\\(/]+) / ([0-9]{4})").Groups;
-                    if (!string.IsNullOrWhiteSpace(g[1].Value) && !string.IsNullOrWhiteSpace(g[3].Value) && !string.IsNullOrWhiteSpace(g[4].Value))
+                    var g = Regex.Match(title, "^([^\\(/]+) (\\([^\\)/]+\\) )?/ ([^\\(/]+) (\\([^\\)/]+\\) )?/ ([0-9]{4})").Groups;
+                    if (!string.IsNullOrWhiteSpace(g[1].Value) && !string.IsNullOrWhiteSpace(g[3].Value) && !string.IsNullOrWhiteSpace(g[5].Value))
                     {
                         name = g[1].Value;
                         originalname = g[3].Value;
 
-                        if (int.TryParse(g[4].Value, out int _yer))
+                        if (int.TryParse(g[5].Value, out int _yer))
                             relased = _yer;
                     }
                     else
