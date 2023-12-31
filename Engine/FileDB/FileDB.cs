@@ -81,6 +81,7 @@ namespace JacRed.Engine
 
                 if (!string.IsNullOrWhiteSpace(torrent.magnet) && torrent.magnet != t.magnet)
                 {
+                    t.ffprobe_tryingdata = 0;
                     t.magnet = torrent.magnet;
                     upt();
                 }
@@ -121,6 +122,12 @@ namespace JacRed.Engine
                     upt();
                 }
 
+                if (torrent.ffprobe != null && t.ffprobe == null)
+                {
+                    t.ffprobe = torrent.ffprobe;
+                    upt();
+                }
+
                 if (updateFull)
                     updateFullDetails(t);
 
@@ -149,7 +156,8 @@ namespace JacRed.Engine
                     sid = torrent.sid,
                     relased = torrent.relased,
                     sizeName = torrent.sizeName,
-                    magnet = torrent.magnet
+                    magnet = torrent.magnet,
+                    ffprobe = torrent.ffprobe
                 };
 
                 savechanges = true;

@@ -24,6 +24,21 @@ namespace JacRed.Engine
         {
             if (File.Exists("Data/masterDb.bz"))
                 masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>("Data/masterDb.bz");
+
+            if (masterDb == null)
+            {
+                if (File.Exists($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz"))
+                    masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz");
+
+                if (masterDb == null && File.Exists($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz"))
+                    masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz");
+
+                if (masterDb == null)
+                    masterDb = new ConcurrentDictionary<string, DateTime>();
+
+                if (File.Exists("lastsync.txt"))
+                    File.Delete("lastsync.txt");
+            }
         }
         #endregion
 

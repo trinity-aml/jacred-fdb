@@ -727,6 +727,11 @@ namespace JacRed.Controllers.CRON
                 var fullNews = await HttpClient.Get(t.url, useproxy: AppInit.conf.Rutracker.useproxy);
                 if (fullNews != null)
                 {
+                    string time = Regex.Match(fullNews, "<a class=\"p-link small\" href=\"viewtopic.php\\?t=[^\"]+\">([^<]+)</a>").Groups[1].Value;
+                    DateTime createTime = tParse.ParseCreateTime(time.Replace("-", " "), "dd.MM.yy HH:mm");
+                    if (createTime != default)
+                        t.createTime = createTime;
+
                     string magnet = Regex.Match(fullNews, "href=\"(magnet:[^\"]+)\" class=\"(med )?magnet-link\"").Groups[1].Value;
                     if (!string.IsNullOrWhiteSpace(magnet))
                     {

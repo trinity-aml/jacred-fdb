@@ -43,13 +43,21 @@ namespace JacRed
 
         public bool mergeduplicates = true;
 
+        public bool mergenumduplicates = true;
+
         public bool openstats = true;
 
         public bool opensync = true;
 
         public bool tracks = false;
 
-        public int tracksdelay = 5000;
+        /// <summary>
+        /// 0 - все
+        /// 1 - день, месяц
+        /// </summary>
+        public int tracksmod = 0;
+
+        public int tracksdelay = 20_000;
 
         public string[] tsuri = new string[] { "http://127.0.0.1:8090" };
 
@@ -59,7 +67,7 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public int maxreadfile = 80;
+        public int maxreadfile = 200;
 
         public bool evercache = false;
 
@@ -84,7 +92,7 @@ namespace JacRed
 
         public TrackerSettings Toloka = new TrackerSettings("https://toloka.to");
 
-        public TrackerSettings Rutracker = new TrackerSettings("https://rutracker.net");
+        public TrackerSettings Rutracker = new TrackerSettings("https://rutracker.org");
 
         public TrackerSettings Selezen = new TrackerSettings("https://open.selezen.org");
 

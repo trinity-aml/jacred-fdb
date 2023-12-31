@@ -40,5 +40,7 @@ namespace JacRed.Models.Details
         public HashSet<string> languages { get; set; }
 
         public List<ffStream> ffprobe { get; set; }
+
+        public int ffprobe_tryingdata { get; set; }
     }
 }

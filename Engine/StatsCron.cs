@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +18,7 @@ namespace JacRed.Engine
                 try
                 {
                     var today = DateTime.Today - (DateTime.Now - DateTime.UtcNow);
-                    var stats = new Dictionary<string, (DateTime lastnewtor, int newtor, int update, int check, int alltorrents, int trkconfirm, int trkwait)>();
+                    var stats = new Dictionary<string, (DateTime lastnewtor, int newtor, int update, int check, int alltorrents, int trkconfirm, int trkwait, int trerror)>();
 
                     foreach (var item in FileDB.masterDb.ToArray())
                     {
@@ -31,7 +30,7 @@ namespace JacRed.Engine
                             try
                             {
                                 if (!stats.TryGetValue(t.trackerName, out var val))
-                                    stats.Add(t.trackerName, (t.createTime, 0, 0, 0, 0, 0, 0));
+                                    stats.Add(t.trackerName, (t.createTime, 0, 0, 0, 0, 0, 0, 0));
 
                                 var s = stats[t.trackerName];
                                 s.alltorrents = s.alltorrents + 1;
@@ -48,9 +47,11 @@ namespace JacRed.Engine
                                 if (t.checkTime >= today)
                                     s.check = s.check + 1;
 
-                                if (AppInit.conf.tracks && !TracksDB.theBad(t.types))
+                                if (!TracksDB.theBad(t.types) && !string.IsNullOrEmpty(t.magnet))
                                 {
-                                    if (TracksDB.Get(t.magnet) != null)
+                                    if (t.ffprobe_tryingdata >= 3)
+                                        s.trerror = s.trerror + 1;
+                                    else if (TracksDB.Get(t.magnet) != null || t.ffprobe != null)
                                         s.trkconfirm = s.trkconfirm + 1;
                                     else
                                         s.trkwait = s.trkwait + 1;
@@ -73,7 +74,8 @@ namespace JacRed.Engine
                         tracks = new 
                         {
                             wait = i.Value.trkwait,
-                            confirm = i.Value.trkconfirm
+                            confirm = i.Value.trkconfirm,
+                            skip = i.Value.trerror
                         }
 
                     }), Formatting.Indented));
