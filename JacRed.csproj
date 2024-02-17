@@ -33,5 +33,14 @@
     <PackageReference Include="MonoTorrent" Version="2.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.HeapCount" Value="60" />
+    <!--<RuntimeHostConfigurationOption Include="System.GC.HeapHardLimit" Value="600000000" />-->
+  </ItemGroup>
+  
+   <!--<PropertyGroup>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+  </PropertyGroup>-->
 
 </Project>

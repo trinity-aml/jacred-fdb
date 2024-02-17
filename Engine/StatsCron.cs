@@ -15,6 +15,14 @@ namespace JacRed.Engine
 
             while (true)
             {
+                if (AppInit.conf.timeStatsUpdate == -1)
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1));
+                    continue;
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(AppInit.conf.timeStatsUpdate));
+
                 try
                 {
                     var today = DateTime.Today - (DateTime.Now - DateTime.UtcNow);
@@ -22,7 +30,7 @@ namespace JacRed.Engine
 
                     foreach (var item in FileDB.masterDb.ToArray())
                     {
-                        foreach (var t in FileDB.OpenRead(item.Key).Values)
+                        foreach (var t in FileDB.OpenRead(item.Key, cache: false).Values)
                         {
                             if (string.IsNullOrEmpty(t.trackerName))
                                 continue;
@@ -81,8 +89,6 @@ namespace JacRed.Engine
                     }), Formatting.Indented));
                 }
                 catch { }
-
-                await Task.Delay(TimeSpan.FromMinutes(AppInit.conf.timeStatsUpdate));
             }
         }
     }

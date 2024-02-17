@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JacRed.Engine.CORE;
 using JacRed.Models;
 using JacRed.Models.Details;
+using System.Linq;
 
 namespace JacRed.Engine
 {
@@ -16,25 +17,49 @@ namespace JacRed.Engine
         /// $"{search_name}:{search_originalname}"
         /// Верхнее время изменения 
         /// </summary>
-        public static ConcurrentDictionary<string, DateTime> masterDb = new ConcurrentDictionary<string, DateTime>();
+        public static ConcurrentDictionary<string, TorrentInfo> masterDb = new ConcurrentDictionary<string, TorrentInfo>();
 
         static ConcurrentDictionary<string, WriteTaskModel> openWriteTask = new ConcurrentDictionary<string, WriteTaskModel>();
 
         static FileDB()
         {
             if (File.Exists("Data/masterDb.bz"))
-                masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>("Data/masterDb.bz");
+                masterDb = JsonStream.Read<ConcurrentDictionary<string, TorrentInfo>>("Data/masterDb.bz");
 
             if (masterDb == null)
             {
                 if (File.Exists($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz"))
-                    masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz");
+                    masterDb = JsonStream.Read<ConcurrentDictionary<string, TorrentInfo>>($"Data/masterDb_{DateTime.Today:dd-MM-yyyy}.bz");
 
                 if (masterDb == null && File.Exists($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz"))
-                    masterDb = JsonStream.Read<ConcurrentDictionary<string, DateTime>>($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz");
+                    masterDb = JsonStream.Read<ConcurrentDictionary<string, TorrentInfo>>($"Data/masterDb_{DateTime.Today.AddDays(-1):dd-MM-yyyy}.bz");
 
                 if (masterDb == null)
-                    masterDb = new ConcurrentDictionary<string, DateTime>();
+                    masterDb = new ConcurrentDictionary<string, TorrentInfo>();
+
+                #region переход с 29.08.2023
+                if (File.Exists("Data/masterDb.bz"))
+                {
+                    try
+                    {
+                        foreach (var item in JsonStream.Read<Dictionary<string, DateTime>>("Data/masterDb.bz"))
+                        {
+                            masterDb.TryAdd(item.Key, new TorrentInfo
+                            {
+                                updateTime = item.Value,
+                                fileTime = item.Value.ToFileTimeUtc()
+                            });
+                        }
+
+                        if (masterDb.Count > 0)
+                        {
+                            JsonStream.Write("Data/masterDb.bz", masterDb);
+                            return;
+                        }
+                    }
+                    catch { }
+                }
+                #endregion
 
                 if (File.Exists("lastsync.txt"))
                     File.Delete("lastsync.txt");
@@ -71,33 +96,49 @@ namespace JacRed.Engine
         static void AddOrUpdateMasterDb(TorrentDetails torrent)
         {
             string key = keyDb(torrent.name, torrent.originalname);
+            var md = new TorrentInfo() { updateTime = torrent.updateTime, fileTime = torrent.updateTime.ToFileTimeUtc() };
 
-            if (masterDb.TryGetValue(key, out DateTime updateTime))
+            if (masterDb.TryGetValue(key, out TorrentInfo info))
             {
-                if (torrent.updateTime > updateTime)
-                    masterDb[key] = torrent.updateTime;
+                if (torrent.updateTime > info.updateTime)
+                    masterDb[key] = md;
             }
             else
             {
-                masterDb.TryAdd(key, torrent.updateTime);
+                masterDb.TryAdd(key, md);
             }
         }
         #endregion
 
         #region OpenRead / OpenWrite
-        public static IReadOnlyDictionary<string, TorrentDetails> OpenRead(string key)
+        public static IReadOnlyDictionary<string, TorrentDetails> OpenRead(string key, bool update_lastread = false, bool cache = true)
         {
             if (openWriteTask.TryGetValue(key, out WriteTaskModel val))
-                return val.db.Database;
-
-            if (AppInit.conf.evercache)
             {
-                var fdb = new FileDB(key);
-                openWriteTask.TryAdd(key, new WriteTaskModel() { db = fdb, openconnection = 1 });
-                return fdb.Database;
+                if (update_lastread)
+                {
+                    val.countread++;
+                    val.lastread = DateTime.UtcNow;
+                }
+
+                return val.db.Database;
             }
 
-            return new FileDB(key).Database;
+            var fdb = new FileDB(key);
+
+            if (AppInit.conf.evercache.enable && (cache || AppInit.conf.evercache.validHour == 0))
+            {
+                var wtm = new WriteTaskModel() { db = fdb, openconnection = 1 };
+                if (update_lastread)
+                {
+                    wtm.countread++;
+                    wtm.lastread = DateTime.UtcNow;
+                }
+
+                openWriteTask.TryAdd(key, wtm);
+            }
+
+            return fdb.Database;
         }
 
         public static FileDB OpenWrite(string key)
@@ -168,6 +209,54 @@ namespace JacRed.Engine
                     File.Delete($"Data/masterDb_{DateTime.Today.AddDays(-3):dd-MM-yyyy}.bz");
             }
             catch { }
+        }
+        #endregion
+
+
+        #region Cron
+        async public static Task Cron()
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(10));
+
+                if (!AppInit.conf.evercache.enable || 0 >= AppInit.conf.evercache.validHour)
+                    continue;
+
+                try
+                {
+                    foreach (var i in openWriteTask)
+                    {
+                        if (DateTime.UtcNow > i.Value.lastread.AddHours(AppInit.conf.evercache.validHour))
+                            openWriteTask.TryRemove(i.Key, out _);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        async public static Task CronFast()
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(20));
+
+                if (!AppInit.conf.evercache.enable || 0 >= AppInit.conf.evercache.validHour)
+                    continue;
+
+                try
+                {
+                    if (openWriteTask.Count > AppInit.conf.evercache.maxOpenWriteTask)
+                    {
+                        var query = openWriteTask.Where(i => DateTime.Now > i.Value.create.AddMinutes(10));
+                        query = query.OrderBy(i => i.Value.countread).ThenBy(i => i.Value.lastread);
+
+                        foreach (var i in query.Take(AppInit.conf.evercache.dropCacheTake))
+                            openWriteTask.TryRemove(i.Key, out _);
+                    }
+                }
+                catch { }
+            }
         }
         #endregion
     }

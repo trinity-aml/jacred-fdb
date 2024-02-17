@@ -39,8 +39,10 @@ namespace JacRed
             });
 
             services.AddControllersWithViews().AddJsonOptions(options => {
-                //options.JsonSerializerOptions.IgnoreNullValues = true;
-                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                //options.JsonSerializerOptions.PropertyNameCaseInsensitive = false;
+                //options.JsonSerializerOptions.WriteIndented = true;
             });
         }
         #endregion
@@ -59,8 +61,10 @@ namespace JacRed
 
             app.UseRouting();
             app.UseResponseCompression();
-            app.UseStaticFiles();
             app.UseModHeaders();
+
+            if (AppInit.conf.web)
+                app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {

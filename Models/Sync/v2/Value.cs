@@ -8,6 +8,8 @@ namespace JacRed.Models.Sync.v2
     {
         public DateTime time { get; set; }
 
-        public Dictionary<string, TorrentBaseDetails> torrents { get; set; }
+        public long fileTime { get; set; }
+
+        public Dictionary<string, TorrentDetails> torrents { get; set; }
     }
 }

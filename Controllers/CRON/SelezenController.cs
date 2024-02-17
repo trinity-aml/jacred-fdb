@@ -195,7 +195,7 @@ namespace JacRed.Controllers.CRON
 
             var torrents = new List<TorrentBaseDetails>();
 
-            foreach (string row in tParse.ReplaceBadNames(html).Split("class=\"card radius-10 overflow-hidden\"").Skip(1))
+            foreach (string row in tParse.ReplaceBadNames(html).Split("card overflow-hidden").Skip(1))
             {
                 if (row.Contains(">Аниме</a>") || row.Contains(" [S0"))
                     continue;

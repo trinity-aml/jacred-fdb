@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JacRed.Engine;
+using JacRed.Engine.CORE;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JacRed.Controllers
@@ -45,7 +46,7 @@ namespace JacRed.Controllers
             }
             #endregion
 
-            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value).ToArray())
+            foreach (var item in FileDB.masterDb.OrderBy(i => i.Value.fileTime).ToArray())
             {
                 using (var fdb = FileDB.OpenWrite(item.Key))
                 {
@@ -53,7 +54,7 @@ namespace JacRed.Controllers
                     {
                         torrent.Value.size = getSizeInfo(torrent.Value.sizeName);
                         torrent.Value.updateTime = DateTime.UtcNow;
-                        FileDB.masterDb[item.Key] = torrent.Value.updateTime;
+                        FileDB.masterDb[item.Key] = new Models.TorrentInfo() { updateTime = torrent.Value.updateTime, fileTime  = torrent.Value.updateTime.ToFileTimeUtc() };
                     }
 
                     fdb.savechanges = true;
@@ -101,7 +102,30 @@ namespace JacRed.Controllers
                         torrent.Value.languages = null;
 
                         torrent.Value.updateTime = DateTime.UtcNow;
-                        FileDB.masterDb[item.Key] = torrent.Value.updateTime;
+                        FileDB.masterDb[item.Key] = new Models.TorrentInfo() { updateTime = torrent.Value.updateTime, fileTime = torrent.Value.updateTime.ToFileTimeUtc() };
+                    }
+
+                    fdb.savechanges = true;
+                }
+            }
+
+            FileDB.SaveChangesToFile();
+            return Json(new { ok = true });
+        }
+
+        public JsonResult UpdateSearchName()
+        {
+            if (HttpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
+                return Json(new { badip = true });
+
+            foreach (var item in FileDB.masterDb.ToArray())
+            {
+                using (var fdb = FileDB.OpenWrite(item.Key))
+                {
+                    foreach (var torrent in fdb.Database)
+                    {
+                        torrent.Value._sn = StringConvert.SearchName(torrent.Value.name);
+                        torrent.Value._so = StringConvert.SearchName(torrent.Value.originalname);
                     }
 
                     fdb.savechanges = true;

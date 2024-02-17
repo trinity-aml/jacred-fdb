@@ -23,7 +23,7 @@ namespace JacRed.Engine.CORE
         {
             if (proxyRandomList.Count == 0)
             {
-                foreach (string ip in AppInit.conf.proxy.list.OrderBy(a => Guid.NewGuid()).ToArray())
+                foreach (string ip in AppInit.conf.proxy.list.OrderBy(a => Guid.NewGuid()))
                     proxyRandomList.Add(ip);
             }
 

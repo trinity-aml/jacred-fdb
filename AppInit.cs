@@ -1,4 +1,5 @@
-﻿using JacRed.Models.AppConf;
+﻿using JacRed.Models;
+using JacRed.Models.AppConf;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -49,7 +50,11 @@ namespace JacRed
 
         public bool opensync = true;
 
+        public bool opensync_v1 = false;
+
         public bool tracks = false;
+
+        public bool web = true;
 
         /// <summary>
         /// 0 - все
@@ -67,15 +72,19 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
+        public bool syncsport = true;
+
+        public bool syncspidr = false;
+
         public int maxreadfile = 200;
 
-        public bool evercache = false;
+        public Evercache evercache = new Evercache() { enable = true, validHour = 1, maxOpenWriteTask = 2000, dropCacheTake = 200 };
 
         public int fdbPathLevels = 2;
 
-        public int timeStatsUpdate = 40; // минут
+        public int timeStatsUpdate = 90; // минут
 
-        public int timeSync = 20; // минут
+        public int timeSync = 60; // минут
 
 
         public TrackerSettings Rutor = new TrackerSettings("http://rutor.info");

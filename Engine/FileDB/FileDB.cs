@@ -37,10 +37,12 @@ namespace JacRed.Engine
             {
                 bool updateFull = false;
 
-                void upt(bool uptfull = false) 
+                void upt(bool uptfull = false, bool updatetime = true) 
                 {
                     savechanges = true;
-                    t.updateTime = DateTime.UtcNow;
+
+                    if (updatetime)
+                        t.updateTime = DateTime.UtcNow;
 
                     if (uptfull)
                         updateFull = true;
@@ -89,13 +91,13 @@ namespace JacRed.Engine
                 if (torrent.sid != t.sid)
                 {
                     t.sid = torrent.sid;
-                    upt();
+                    upt(updatetime: false);
                 }
 
                 if (torrent.pir != t.pir)
                 {
                     t.pir = torrent.pir;
-                    upt();
+                    upt(updatetime: false);
                 }
 
                 if (!string.IsNullOrWhiteSpace(torrent.sizeName) && torrent.sizeName != t.sizeName)
@@ -107,12 +109,14 @@ namespace JacRed.Engine
                 if (!string.IsNullOrWhiteSpace(torrent.name) && torrent.name != t.name)
                 {
                     t.name = torrent.name;
+                    t._sn = StringConvert.SearchName(t.name);
                     upt();
                 }
 
                 if (!string.IsNullOrWhiteSpace(torrent.originalname) && torrent.originalname != t.originalname)
                 {
                     t.originalname = torrent.originalname;
+                    t._so = StringConvert.SearchName(t.originalname);
                     upt();
                 }
 
@@ -177,8 +181,11 @@ namespace JacRed.Engine
             if (openWriteTask.TryGetValue(fdbkey, out WriteTaskModel val))
             {
                 val.openconnection -= 1;
-                if (val.openconnection <= 0 && !AppInit.conf.evercache)
-                    openWriteTask.TryRemove(fdbkey, out _);
+                if (0 >= val.openconnection)
+                {
+                    if (!AppInit.conf.evercache.enable || (AppInit.conf.evercache.enable && AppInit.conf.evercache.validHour > 0))
+                        openWriteTask.TryRemove(fdbkey, out _);
+                }
             }
         }
         #endregion

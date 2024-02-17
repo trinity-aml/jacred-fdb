@@ -42,5 +42,10 @@ namespace JacRed.Models.Details
         public List<ffStream> ffprobe { get; set; }
 
         public int ffprobe_tryingdata { get; set; }
+
+
+        public string _sn { get; set; }
+
+        public string _so { get; set; }
     }
 }

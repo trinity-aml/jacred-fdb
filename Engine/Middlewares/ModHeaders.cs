@@ -14,17 +14,24 @@ namespace JacRed.Engine.Middlewares
 
         public Task Invoke(HttpContext httpContext)
         {
-            httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Accept, Content-Type");
-            httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST, GET");
-            httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            httpContext.Response.Headers.Add("Referrer-Policy", "no-referrer");
+            httpContext.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+            httpContext.Response.Headers.Add("Access-Control-Allow-Private-Network", "true");
+            httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Accept, Origin, Content-Type");
+            httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+
+            if (httpContext.Request.Headers.TryGetValue("origin", out var origin))
+                httpContext.Response.Headers.Add("Access-Control-Allow-Origin", origin.ToString());
+            else if (httpContext.Request.Headers.TryGetValue("referer", out var referer))
+                httpContext.Response.Headers.Add("Access-Control-Allow-Origin", referer.ToString());
+            else
+                httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
             if (httpContext.Connection.RemoteIpAddress.ToString() != "127.0.0.1")
             {
                 if (httpContext.Request.Path.Value.StartsWith("/cron/") || httpContext.Request.Path.Value.StartsWith("/jsondb") || httpContext.Request.Path.Value.StartsWith("/dev/"))
                     return Task.CompletedTask;
 
-                if (!string.IsNullOrWhiteSpace(AppInit.conf.apikey))
+                if (!string.IsNullOrEmpty(AppInit.conf.apikey))
                 {
                     if (httpContext.Request.Path.Value == "/" || Regex.IsMatch(httpContext.Request.Path.Value, "^/(api/v1\\.0/conf|stats/|sync/)"))
                         return _next(httpContext);
