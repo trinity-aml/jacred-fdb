@@ -26,7 +26,7 @@ namespace JacRed
 
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Torrents());
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Spidr());
-
+            ThreadPool.QueueUserWorkItem(async _ => await TrackersCron.Run());
             ThreadPool.QueueUserWorkItem(async _ => await StatsCron.Run());
 
             ThreadPool.QueueUserWorkItem(async _ => await FileDB.Cron());
@@ -36,6 +36,7 @@ namespace JacRed
             ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(2));
             ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(3));
             ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(4));
+            ThreadPool.QueueUserWorkItem(async _ => await TracksCron.Run(5));
 
             CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

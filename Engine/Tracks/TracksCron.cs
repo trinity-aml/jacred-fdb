@@ -13,6 +13,7 @@ namespace JacRed.Engine
         /// 2 - месяц
         /// 3 - год
         /// 4 - остальное
+        /// 5 - обновления
         /// </param>
         async public static Task Run(int typetask)
         {
@@ -70,6 +71,11 @@ namespace JacRed.Engine
                                         isok = true;
                                         break;
                                     }
+                                case 5:
+                                    {
+                                        isok = t.updateTime >= DateTime.UtcNow.AddMonths(-1);
+                                        break;
+                                    }
                                 default:
                                     break;
                             }
@@ -104,7 +110,7 @@ namespace JacRed.Engine
                             if ((typetask == 3 || typetask == 4) && DateTime.Now > starttime.AddMonths(2))
                                 break;
 
-                            if ((typetask == 3 || typetask == 4) && t.ffprobe_tryingdata >= 3)
+                            if ((typetask == 3 || typetask == 4 || typetask == 5) && t.ffprobe_tryingdata >= 3)
                                 continue;
 
                             if (TracksDB.Get(t.magnet) == null)
