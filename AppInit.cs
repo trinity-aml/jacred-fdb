@@ -72,7 +72,7 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public string[] disable_trackers = new string[] { "hdrezka", "anifilm" };
+        public string[] disable_trackers = new string[] { "hdrezka", "torrentby" };
 
         public bool syncsport = true;
 
