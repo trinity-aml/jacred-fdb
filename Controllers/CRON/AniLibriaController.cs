@@ -14,33 +14,24 @@ namespace JacRed.Controllers.CRON
     {
         static bool workParse = false;
 
-        string aft = "";
-
         async public Task<string> Parse(int limit)
         {
-            if (limit == 0)
-                limit = 40;
-
             if (workParse)
                 return "work";
 
             workParse = true;
 
+            if (limit == 0)
+            {
+                limit = 40;
+            }
+
             try
             {
-                for (int after = 0; after <= limit; after = after+40)
-                {                  
+                for (int after = 0; after <= limit; after = after + 40)
+                {
 
-                    if (after == 0)
-                    {
-                        aft = "include=raw_torrent";
-                    }
-                    else if (after > 0)
-                    {
-                        aft = $$"""after={{after}}&include=raw_torrent""";
-                    }
-                    var roots = await HttpClient.Get<List<RootObject>>($"{AppInit.conf.Anilibria.rqHost()}/v3/title/updates?limit=40&{aft}", IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
-                    
+                    var roots = await HttpClient.Get<List<RootObject>>($"{AppInit.conf.Anilibria.rqHost()}/v2/getUpdates?limit=40&after={after}&include=raw_torrent", IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
                     if (roots == null || roots.Count == 0)
                         continue;
 

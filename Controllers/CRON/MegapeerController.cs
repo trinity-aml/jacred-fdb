@@ -39,14 +39,14 @@ namespace JacRed.Controllers.CRON
 
             try
             {
-                // 174 - Зарубежные фильмы          | Фильмы
+                // 80 - Зарубежные фильмы          | Фильмы
                 // 79  - Наши фильмы                | Фильмы
                 // 6   - Зарубежные сериалы         | Сериалы
                 // 5   - Наши сериалы               | Сериалы
                 // 55  - Научно-популярные фильмы   | Док. сериалы, Док. фильмы
                 // 57  - Телевизор                  | ТВ Шоу
                 // 76  - Мультипликация             | Мультфильмы, Мультсериалы
-                foreach (string cat in new List<string>() { "174", "79", "6", "5", "55", "57", "76" })
+                foreach (string cat in new List<string>() { "80", "79", "6", "5", "55", "57", "76" })
                 {
                     bool res = await parsePage(cat, page);
                     log += $"{cat} - {page} / {res}\n";
@@ -62,7 +62,7 @@ namespace JacRed.Controllers.CRON
         #region UpdateTasksParse
         async public Task<string> UpdateTasksParse()
         {
-            foreach (string cat in new List<string>() { "174", "79", "6", "5", "55", "57", "76" })
+            foreach (string cat in new List<string>() { "80", "79", "6", "5", "55", "57", "76" })
             {
                 string html = await HttpClient.Get($"{AppInit.conf.Megapeer.rqHost()}/browse.php?cat={cat}", encoding: Encoding.GetEncoding(1251), useproxy: AppInit.conf.Megapeer.useproxy, addHeaders: new List<(string name, string val)>()
                 {
@@ -202,7 +202,7 @@ namespace JacRed.Controllers.CRON
                 int relased = 0;
                 string name = null, originalname = null;
 
-                if (cat == "174")
+                if (cat == "80")
                 {
                     #region Зарубежные фильмы
                     var g = Regex.Match(title, "^([^/]+) / ([^/]+) / ([^/\\(]+) \\(([0-9]{4})\\)").Groups;
@@ -364,7 +364,7 @@ namespace JacRed.Controllers.CRON
                     string[] types = new string[] { };
                     switch (cat)
                     {
-                        case "174":
+                        case "80":
                         case "79":
                             types = new string[] { "movie" };
                             break;
