@@ -72,7 +72,7 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public string[] disable_trackers = new string[] { "hdrezka", "torrentby" };
+        public string[] disable_trackers = new string[] { "hdrezka" };
 
         public bool syncsport = true;
 
@@ -89,9 +89,9 @@ namespace JacRed
         public int timeSync = 60; // минут
 
 
-        public TrackerSettings Rutor = new TrackerSettings("http://rutor.info");
+        public TrackerSettings Rutor = new TrackerSettings("https://rutor.is");
 
-        public TrackerSettings Megapeer = new TrackerSettings("http://megapeer.vip");
+        public TrackerSettings Megapeer = new TrackerSettings("https://megapeer.vip");
 
         public TrackerSettings TorrentBy = new TrackerSettings("https://torrent.by");
 
