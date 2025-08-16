@@ -15,17 +15,14 @@ namespace JacRed.Controllers.CRON
 	{
 		static bool workParse = false;
 
-		async public Task<string> Parse(int limit)
+		async public Task<string> Parse()
 		{
 			if (workParse)
 				return "work";
 
 			workParse = true;
-
-			if (limit == 0)
-			{
-				limit = 40;
-			}
+			
+			int limit = 70;
 
 			try
 			{
@@ -35,9 +32,9 @@ namespace JacRed.Controllers.CRON
 
 				while (fetched < limit)
 				{
-					string url = $"{AppInit.conf.Anilibria.rqHost()}/api/v1/anime/torrents?page={page}&limit={perPage}&include=release";
+					string url = $"{AppInit.conf.Anilibria.rqHost()}/api/v1/anime/torrents?page={page}&limit={perPage}";
 					var resp = await HttpClient.Get<TorrentsResponse>(url, IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
-					if (resp == null || resp.data == null || resp.data.Count == 0)
+					if (resp == null || resp.data == null )
 						break;
 
 					var torrents = new List<TorrentBaseDetails>();
