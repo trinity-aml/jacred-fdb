@@ -100,7 +100,7 @@ namespace JacRed.Controllers.CRON
 
 					FileDB.AddOrUpdate(torrents);
 
-					fetched += resp.data.Count;
+					fetched ++;
 					page++;
 					await Task.Delay(200);
 				}
