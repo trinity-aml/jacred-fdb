@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JacRed.Engine.CORE;
@@ -30,8 +30,8 @@ namespace JacRed.Controllers.CRON
             {
                 for (int after = 0; after <= limit; after = after + 40)
                 {
-
-                    var roots = await HttpClient.Get<List<RootObject>>($"{AppInit.conf.Anilibria.rqHost()}/v2/getUpdates?limit=40&after={after}&include=raw_torrent", IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
+                    // Using the new AniLibria API v1
+                    var roots = await HttpClient.Get<List<RootObject>>($"{AppInit.conf.Anilibria.rqHost()}/api/v1/getUpdates?limit=40&after={after}&include=raw_torrent", IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
                     if (roots == null || roots.Count == 0)
                         continue;
 
@@ -46,7 +46,7 @@ namespace JacRed.Controllers.CRON
                                 continue;
 
                             // Данные раздачи
-                            string url = $"anilibria.tv:{root.code}:{torrent.quality.resolution}:{torrent.quality.encoder}";
+                            string url = $"anilibria.top:{root.code}:{torrent.quality.resolution}:{torrent.quality.encoder}";
                             string title = $"{root.names.ru} / {root.names.en} {root.season.year} (s{root.season.code}, e{torrent.series.@string}) [{torrent.quality.@string}]";
 
                             #region Получаем/Обновляем магнет

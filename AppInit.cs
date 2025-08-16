@@ -1,4 +1,4 @@
-﻿using JacRed.Models;
+using JacRed.Models;
 using JacRed.Models.AppConf;
 using Newtonsoft.Json;
 using System;
@@ -107,7 +107,7 @@ namespace JacRed
 
         public TrackerSettings Selezen = new TrackerSettings("https://open.selezen.org");
 
-        public TrackerSettings Anilibria = new TrackerSettings("https://api.anilibria.tv");
+        public TrackerSettings Anilibria = new TrackerSettings("https://anilibria.top");
 
         public TrackerSettings Animelayer = new TrackerSettings("http://animelayer.ru");
 
