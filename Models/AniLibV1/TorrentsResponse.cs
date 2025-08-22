@@ -59,6 +59,7 @@ namespace JacRed.Models.AniLibV1
 		public int id { get; set; }
 		public int year { get; set; }
 		public ReleaseName name { get; set; }
+		public string alias { get; set; }
 		public ReleaseSeason season { get; set; }
 	}
 

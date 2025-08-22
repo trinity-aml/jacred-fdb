@@ -43,8 +43,9 @@ namespace JacRed.Controllers.CRON
 					int limit2 = resp.meta.pagination.total_pages;
 					if (limit2 == 0)
 						break;
-					if (limit != limit2)
-						limit = limit2;
+					if (limit_page == 0)
+						if (limit != limit2)
+							limit = limit2;
 					
 					if (resp == null || resp.data == null )
 						break;
@@ -65,8 +66,8 @@ namespace JacRed.Controllers.CRON
 							continue;
 
 						// Build unique url id similar to previous scheme, but v1 based
-						string urlId = $"aniliberty:{item.release.id}:{(quality ?? "")}:{(codec ?? "")}";
-
+						string urlId = $"anilibria.top/anime/releases/release/{item.release.alias}/torrents";
+						
 						DateTime createTime = default;
 						if (DateTime.TryParse(item.updated_at, out DateTime upd))
 							createTime = upd;
@@ -120,7 +121,7 @@ namespace JacRed.Controllers.CRON
 			catch { }
 
 			workParse = false;
-			return "ok";
+			return $"{limit} pages ok\n";
 		}
 	}
 }
