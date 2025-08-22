@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using JacRed.Engine;
 using JacRed.Models.Details;
 using JacRed.Models.AniLibV1;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace JacRed.Controllers.CRON
 {
@@ -15,14 +16,18 @@ namespace JacRed.Controllers.CRON
 	{
 		static bool workParse = false;
 
-		async public Task<string> Parse()
+		async public Task<string> Parse(int limit_page)
 		{
 			if (workParse)
 				return "work";
 
 			workParse = true;
-			
+
 			int limit = 70;
+			if (limit_page > 0)
+			{
+				limit = limit_page;
+			}
 
 			try
 			{
@@ -34,6 +39,13 @@ namespace JacRed.Controllers.CRON
 				{
 					string url = $"{AppInit.conf.Anilibria.rqHost()}/api/v1/anime/torrents?page={page}&limit={perPage}";
 					var resp = await HttpClient.Get<TorrentsResponse>(url, IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
+					
+					int limit2 = resp.meta.pagination.total_pages;
+					if (limit2 == 0)
+						break;
+					if (limit != limit2)
+						limit = limit2;
+					
 					if (resp == null || resp.data == null )
 						break;
 
