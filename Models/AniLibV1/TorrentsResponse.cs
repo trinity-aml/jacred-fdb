@@ -1,3 +1,5 @@
+using System;
+
 namespace JacRed.Models.AniLibV1
 {
 	public class TorrentsResponse
@@ -37,8 +39,8 @@ namespace JacRed.Models.AniLibV1
 		public string magnet { get; set; }
 		public TorrentQuality quality { get; set; }
 		public TorrentCodec codec { get; set; }
-		public string created_at { get; set; }
-		public string updated_at { get; set; }
+		public DateTime created_at { get; set; }
+		public DateTime updated_at { get; set; }
 		public Release release { get; set; }
 	}
 

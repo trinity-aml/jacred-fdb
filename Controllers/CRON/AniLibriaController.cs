@@ -37,8 +37,8 @@ namespace JacRed.Controllers.CRON
 
 				while (fetched < limit)
 				{
-					string url = $"{AppInit.conf.Anilibria.rqHost()}/api/v1/anime/torrents?page={page}&limit={perPage}";
-					var resp = await HttpClient.Get<TorrentsResponse>(url, IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
+					string urlID = $"{AppInit.conf.Anilibria.rqHost()}/api/v1/anime/torrents?page={page}&limit={perPage}";
+					var resp = await HttpClient.Get<TorrentsResponse>(urlID, IgnoreDeserializeObject: true, useproxy: AppInit.conf.Anilibria.useproxy);
 					
 					int limit2 = resp.meta.pagination.total_pages;
 					if (limit2 == 0)
@@ -66,16 +66,19 @@ namespace JacRed.Controllers.CRON
 							continue;
 
 						// Build unique url id similar to previous scheme, but v1 based
-						string urlId = $"anilibria.top/anime/releases/release/{item.release.alias}/torrents";
-						
-						DateTime createTime = default;
-						if (DateTime.TryParse(item.updated_at, out DateTime upd))
-							createTime = upd;
-						else if (DateTime.TryParse(item.created_at, out DateTime crt))
-							createTime = crt;
-						if (createTime == default)
-							createTime = DateTime.UtcNow;
+						string url = $"{AppInit.conf.Anilibria.rqHost()}/anime/releases/release/{item.release.alias}/torrents";
 
+						DateTime createTime;
+
+						if (item.updated_at > item.created_at)
+						{
+							createTime = item.updated_at;
+						}
+						else
+						{
+							createTime = item.created_at;
+						}
+						
 						string title = $"{nameRu} / {nameEn} {year} [{quality}{(string.IsNullOrWhiteSpace(codec) ? "" : ", " + codec)}]";
 
 						string sizeName = null;
@@ -98,7 +101,7 @@ namespace JacRed.Controllers.CRON
 						{
 							trackerName = "anilibria",
 							types = new string[] { "anime" },
-							url = urlId,
+							url = url,
 							title = title,
 							sid = item.seeders,
 							pir = item.leechers,
