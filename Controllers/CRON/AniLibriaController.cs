@@ -66,7 +66,7 @@ namespace JacRed.Controllers.CRON
 							continue;
 
 						// Build unique url id similar to previous scheme, but v1 based
-						string url = $"{AppInit.conf.Anilibria.rqHost()}/anime/releases/release/{item.release.alias}/torrents";
+						string url = $"{AppInit.conf.Anilibria.rqHost()}:{item.release.id}:{(quality ?? "")}:{(codec ?? "")}";
 
 						DateTime createTime;
 
