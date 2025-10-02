@@ -29,14 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BencodeNET" Version="4.0.0" />
-    <PackageReference Include="MonoTorrent" Version="2.0.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <!--<RuntimeHostConfigurationOption Include="System.GC.HeapCount" Value="60" />-->
-    <!--<RuntimeHostConfigurationOption Include="System.GC.HeapHardLimit" Value="600000000" />-->
+    <PackageReference Include="BencodeNET" Version="5.0.0" />
+    <PackageReference Include="MonoTorrent" Version="3.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   
    <!--<PropertyGroup>

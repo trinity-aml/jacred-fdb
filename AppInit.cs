@@ -4,35 +4,55 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace JacRed
 {
     public class AppInit
     {
         #region AppInit
+        static AppInit()
+        {
+            void updateConf()
+            {
+                try
+                {
+                    if (cacheconf.Item1 == null)
+                    {
+                        if (!File.Exists("init.conf"))
+                        {
+                            cacheconf.Item1 = new AppInit();
+                            return;
+                        }
+                    }
+
+                    var lastWriteTime = File.GetLastWriteTime("init.conf");
+
+                    if (cacheconf.Item2 != lastWriteTime)
+                    {
+                        cacheconf.Item1 = JsonConvert.DeserializeObject<AppInit>(File.ReadAllText("init.conf"));
+                        cacheconf.Item2 = lastWriteTime;
+                    }
+                }
+                catch { }
+            }
+
+            updateConf();
+
+            ThreadPool.QueueUserWorkItem(async _ =>
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    updateConf();
+                }
+            });
+        }
+
         static (AppInit, DateTime) cacheconf = default;
 
-        public static AppInit conf
-        {
-            get
-            {
-                if (cacheconf.Item1 == null)
-                {
-                    if (!File.Exists("init.conf"))
-                        return new AppInit();
-                }
-
-                var lastWriteTime = File.GetLastWriteTime("init.conf");
-
-                if (cacheconf.Item2 != lastWriteTime)
-                {
-                    cacheconf.Item1 = JsonConvert.DeserializeObject<AppInit>(File.ReadAllText("init.conf"));
-                    cacheconf.Item2 = lastWriteTime;
-                }
-
-                return cacheconf.Item1;
-            }
-        }
+        public static AppInit conf => cacheconf.Item1;
         #endregion
 
 
@@ -72,7 +92,7 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public string[] disable_trackers = new string[] { "hdrezka" };
+        public string[] disable_trackers = new string[] { "hdrezka", "anifilm", "anilibria" };
 
         public bool syncsport = true;
 
@@ -89,9 +109,9 @@ namespace JacRed
         public int timeSync = 60; // минут
 
 
-        public TrackerSettings Rutor = new TrackerSettings("https://rutor.is");
+        public TrackerSettings Rutor = new TrackerSettings("http://rutor.info");
 
-        public TrackerSettings Megapeer = new TrackerSettings("https://megapeer.vip");
+        public TrackerSettings Megapeer = new TrackerSettings("http://megapeer.vip");
 
         public TrackerSettings TorrentBy = new TrackerSettings("https://torrent.by");
 
@@ -107,7 +127,7 @@ namespace JacRed
 
         public TrackerSettings Selezen = new TrackerSettings("https://open.selezen.org");
 
-        public TrackerSettings Anilibria = new TrackerSettings("https://anilibria.top");
+        public TrackerSettings Anilibria = new TrackerSettings("https://api.anilibria.tv");
 
         public TrackerSettings Animelayer = new TrackerSettings("http://animelayer.ru");
 
