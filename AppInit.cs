@@ -92,7 +92,7 @@ namespace JacRed
 
         public string[] synctrackers = null;
 
-        public string[] disable_trackers = new string[] { "hdrezka", "anifilm", "anilibria" };
+        public string[] disable_trackers = new string[] { "hdrezka" };
 
         public bool syncsport = true;
 
@@ -138,7 +138,8 @@ namespace JacRed
         public TrackerSettings Baibako = new TrackerSettings("http://baibako.tv");
 
         public TrackerSettings Lostfilm = new TrackerSettings("https://www.lostfilm.tv");
-
+        
+        public TrackerSettings Anistar = new TrackerSettings("https://anistar.org");
 
         public ProxySettings proxy = new ProxySettings();
 
