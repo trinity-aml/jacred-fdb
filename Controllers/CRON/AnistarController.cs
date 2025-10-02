@@ -25,7 +25,10 @@ namespace JacRed.Controllers.CRON
     public class AnistarController : BaseController
     {
         // ===== ДИНАМИЧЕСКИЕ ЖАНРЫ =====
-        static readonly string GenresCachePath = "Data/temp/anistar_genres.json";
+        // Абсолютный путь, чтобы не зависеть от WorkingDirectory
+        static readonly string GenresCachePath = System.IO.Path.Combine(
+            AppContext.BaseDirectory, "Data", "temp", "anistar_genres.json");
+
         static List<string> genreSlugs = LoadCachedGenres();
 
         static Dictionary<string, List<TaskParse>> taskParse = new Dictionary<string, List<TaskParse>>();
@@ -41,7 +44,10 @@ namespace JacRed.Controllers.CRON
         public async Task<string> RefreshGenres()
         {
             var ok = await EnsureGenresAsync(force: true);
-            return ok ? $"ok ({genreSlugs.Count} genres)" : "fail";
+            var exists = IO.File.Exists(GenresCachePath);
+            var size = exists ? new IO.FileInfo(GenresCachePath).Length : 0;
+
+            return $"{(ok ? "ok" : "fail")} (genres: {genreSlugs.Count}, file: {(exists ? "exists" : "absent")}, size: {size}b, path: {GenresCachePath})";
         }
         #endregion
 
@@ -428,33 +434,83 @@ namespace JacRed.Controllers.CRON
         {
             if (!force && genreSlugs.Count > 0) return true;
 
+            var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string host = null;
+
             try
             {
-                string url = $"{AppInit.conf.Anistar.rqHost().TrimEnd('/')}/anime/";
-                string html = await HttpClient.Get(url, timeoutSeconds: 15, useproxy: AppInit.conf.Anistar.useproxy);
-                if (html == null) return genreSlugs.Count > 0;
+                host = AppInit.conf?.Anistar?.rqHost();
+                if (string.IsNullOrWhiteSpace(host))
+                    host = AppInit.conf?.Anistar?.host;
 
-                var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (string.IsNullOrWhiteSpace(host))
+                    throw new Exception("Anistar host is not configured (rqHost/host is null or empty).");
 
-                foreach (Match m in Regex.Matches(html, @"href\s*=\s*""(?<u>(?:https?://[^""]+)?/anime/(?<slug>[a-z0-9\-]+)/)""", RegexOptions.IgnoreCase))
+                host = host.TrimEnd('/');
+                string url = $"{host}/anime/";
+
+                string html = await HttpClient.Get(url, timeoutSeconds: 20, useproxy: AppInit.conf.Anistar.useproxy);
+                if (string.IsNullOrWhiteSpace(html))
+                    throw new Exception("Empty HTML for /anime/ (anti-bot or network).");
+
+                // Основной паттерн: /anime/<slug>/
+                foreach (Match m in Regex.Matches(html, @"href\s*=\s*""(?<u>(?:https?://[^""]+)?/anime/(?<slug>[a-z0-9\-]+)/)""",
+                                                  RegexOptions.IgnoreCase))
                 {
                     var slug = m.Groups["slug"].Value.Trim().ToLowerInvariant();
-                    if (string.IsNullOrWhiteSpace(slug)) continue;
-                    if (slug is "page" or "feed" or "rss") continue;
-                    found.Add(slug);
+                    if (!string.IsNullOrWhiteSpace(slug) && slug is not ("page" or "feed" or "rss"))
+                        found.Add(slug);
                 }
 
-                genreSlugs = found.OrderBy(s => s).ToList();
+                // Fallback (без завершающего "/")
+                if (found.Count == 0)
+                {
+                    foreach (Match m in Regex.Matches(html, @"href\s*=\s*""(?<u>(?:https?://[^""]+)?/anime/(?<slug>[a-z0-9\-]+))""",
+                                                      RegexOptions.IgnoreCase))
+                    {
+                        var slug = m.Groups["slug"].Value.Trim().ToLowerInvariant();
+                        if (!string.IsNullOrWhiteSpace(slug) && !slug.Contains("page"))
+                            found.Add(slug);
+                    }
+                }
 
-                IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(GenresCachePath));
-                IO.File.WriteAllText(GenresCachePath, JsonConvert.SerializeObject(genreSlugs));
-
-                return genreSlugs.Count > 0;
+                // Fallback по блоку жанров
+                if (found.Count == 0)
+                {
+                    var block = Regex.Match(html, @"Жанры.*?</ul>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                    if (block.Success)
+                    {
+                        foreach (Match m in Regex.Matches(block.Value, @"/anime/(?<slug>[a-z0-9\-]+)/?", RegexOptions.IgnoreCase))
+                        {
+                            var slug = m.Groups["slug"].Value.Trim().ToLowerInvariant();
+                            if (!string.IsNullOrWhiteSpace(slug))
+                                found.Add(slug);
+                        }
+                    }
+                }
             }
             catch
             {
-                return genreSlugs.Count > 0; // оставим старый кэш, если есть
+                // проглатываем — запись кэша произойдёт ниже
             }
+            finally
+            {
+                try
+                {
+                    // Обновляем память и ВСЕГДА пишем файл (даже пустой список)
+                    if (found.Count > 0)
+                        genreSlugs = found.OrderBy(s => s).ToList();
+
+                    var dir = System.IO.Path.GetDirectoryName(GenresCachePath);
+                    if (!string.IsNullOrWhiteSpace(dir))
+                        IO.Directory.CreateDirectory(dir);
+
+                    IO.File.WriteAllText(GenresCachePath, JsonConvert.SerializeObject(genreSlugs ?? new List<string>()));
+                }
+                catch { /* можно залогировать */ }
+            }
+
+            return genreSlugs.Count > 0;
         }
         #endregion
 
