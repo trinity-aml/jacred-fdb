@@ -1,13 +1,5 @@
-# Установка
-curl -s https://raw.githubusercontent.com/immisterio/jacred-fdb/main/install.sh | bash
-
-* ПО УМОЛЧАНИЯ НАСТРОЕНА СИНХРОНИЗАЦИЯ БАЗЫ С ВНЕШНЕГО СЕРВЕРА
-
-# Docker
-https://github.com/pavelpikta/docker-jacred-fdb
-
 # Источники 
-Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Baibako, LostFilm, Animelayer
+Kinozal, Nnmclub, Rutor, Torrentby, Bitru, Rutracker, Megapeer, Selezen, Toloka (UKR), Baibako, LostFilm, Animelayer, Anilibria, Anifilm, Anistar
 
 # Самостоятельный парсинг источников
 1. Настроить init.conf (пример настроек в example.conf)
